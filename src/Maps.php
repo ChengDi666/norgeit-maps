@@ -17,6 +17,23 @@ class Maps extends Tool
         Nova::script('maps', __DIR__.'/../dist/js/tool.js');
         Nova::style('maps', __DIR__.'/../dist/css/tool.css');
     }
+    
+	public $lats = [];
+
+    public function __construct($lat, $lng)
+    {      
+        global $lats;
+        $lats['lat'] = $lat;
+        $lats['lng'] = $lng;
+        
+        \Log::info($lng);
+        \Log::info($this->component);
+        // return $this->withMeta([
+        //     'lat' => $lat,
+        //     'lng' => $lng
+        // ]);
+    }
+
 
     /**
      * Build the view that renders the navigation links for the tool.
@@ -24,7 +41,8 @@ class Maps extends Tool
      * @return \Illuminate\View\View
      */
     public function renderNavigation()
-    {
-        return view('maps::navigation');
+    {   
+        global $lats;
+        return view('maps::navigation', $lats);
     }
 }

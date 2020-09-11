@@ -1,1 +1,1 @@
-.my-amap-page{height:700px;width:100%}
+.my-amap-page{height:calc(100vh - 150px);width:100%;-webkit-box-shadow:0 0 15px 5px #ccc;box-shadow:0 0 15px 5px #ccc}.amap-copyright,.amap-logo{display:none!important}

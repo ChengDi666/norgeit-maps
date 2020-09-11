@@ -11,7 +11,7 @@ use Norgeit\Maps\Http\Middleware\Authorize;
 class ToolServiceProvider extends ServiceProvider
 {
     /**
-     * Bootstrap any application services.
+     * Bootstrap any application services.      引导任何应用程序服务
      *
      * @return void
      */
@@ -23,13 +23,14 @@ class ToolServiceProvider extends ServiceProvider
             $this->routes();
         });
 
-        Nova::serving(function (ServingNova $event) {
+         (function (ServingNova $event) {
             //
         });
     }
 
-    /**
-     * Register the tool's routes.
+
+    /** 
+     * Register the tool's routes.      注册工具的路由
      *
      * @return void
      */
@@ -45,7 +46,7 @@ class ToolServiceProvider extends ServiceProvider
     }
 
     /**
-     * Register any application services.
+     * Register any application services.       注册任何应用程序服务
      *
      * @return void
      */

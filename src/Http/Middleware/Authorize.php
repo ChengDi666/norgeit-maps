@@ -8,7 +8,7 @@ use Norgeit\Maps\Maps;
 class Authorize
 {
     /**
-     * Handle the incoming request.
+     * Handle the incoming request. 处理传入的请求
      *
      * @param  \Illuminate\Http\Request  $request
      * @param  \Closure  $next
@@ -22,7 +22,7 @@ class Authorize
     }
 
     /**
-     * Determine whether this tool belongs to the package.
+     * Determine whether this tool belongs to the package.  确定此工具是否属于包
      *
      * @param  \Laravel\Nova\Tool  $tool
      * @return bool
