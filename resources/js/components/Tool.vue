@@ -56,7 +56,7 @@ export default {
     let self = this;
     return {
       cun: [],
-      beiyong: {name: '备用',lat: "32.059358",lng: "118.796628"},
+      beiyong: {lat: "32.059358",lng: "118.796628"},
       markers: [],
       markerRefs: [],
       amapManager,
@@ -75,24 +75,31 @@ export default {
     };
   },
   created() {
-    this.cun = JSON.parse(localStorage.getItem("res")) ? JSON.parse(localStorage.getItem("res")) : [];
+    this.cun = JSON.parse(localStorage.getItem("requestMarker")) ? JSON.parse(localStorage.getItem("requestMarker")) : [];
+    this.values = JSON.parse(localStorage.getItem("GISInitPosition")) ? JSON.parse(localStorage.getItem("GISInitPosition")) : {};
   },
   mounted() {
     this.init_position();
-    console.log(this);
-    console.log('field  ' +this.field);
-    console.log(this.$route.params);
+    // console.log(this);
+    // console.log('field  ' +this.field);
+    // console.log(this.$route.params);
     setInterval(() => {
       this.dome();
     }, 200000);
 
-    if(this.$route.params.lat == undefined) {
-      this.values = this.beiyong;
-      setTimeout(() => {          
-        let map = amapManager.getMap();
-        amapManager.getMap().setCenter(new AMap.LngLat(this.beiyong.lng, this.beiyong.lat));
-      }, 400);
-    } else this.values = this.$route.params;
+    if(this.$route.params.lat == undefined) {   //  刷新
+      if(this.values.lat == undefined) {
+        //  没有缓存
+        this.values = this.beiyong;
+        // console.log('没有缓存,要请求数据');
+      }
+      // console.log('刷新取值');
+    } else {
+      //  点击传值
+      // console.log('点击传值');
+      this.values = this.$route.params;
+      localStorage.setItem("GISInitPosition", JSON.stringify(this.values));
+    }
     console.log(this.values);
     let lng = this.values.lng, lat = this.values.lat;
     this.center = [lng, lat];
@@ -168,10 +175,10 @@ export default {
       else this.cun = arr;
       // console.log(this.cun);
       this.clusters.addMarker(marker);
-      localStorage.setItem("res", JSON.stringify(this.cun));
+      localStorage.setItem("requestMarker", JSON.stringify(this.cun));
     },
     dome() {//  判断有效期
-      const markerArr = JSON.parse(localStorage.getItem("res"));
+      const markerArr = JSON.parse(localStorage.getItem("requestMarker"));
       const thisTime = new Date();
       if (markerArr) {
         markerArr.map((item) => {
@@ -193,7 +200,7 @@ export default {
       });
     },
     dellocalStorage() {
-      localStorage.removeItem("res");
+      localStorage.removeItem("requestMarker");
       this.cun = [];
     },
 
@@ -218,14 +225,14 @@ export default {
     },
     init_courses()
     {
-      axios.get('https://yantai.api.shlj.ltd/api/devices?position=').then((res) => {
-        console.log(res);
-        this.devices = res.data.data;
-        // this.addDevices(res.data.data);
-      });
+      // axios.get('https://yantai.api.shlj.ltd/api/devices?position=').then((res) => {
+      //   console.log(res);
+      //   this.devices = res.data.data;
+      //   // this.addDevices(res.data.data);
+      // });
       axios.get('/nova-api/devices?search=&filters=W10%3D&orderBy=&perPage=25&trashed=&page=1&relationshipType=')
       .then(response => {
-        console.log(response);
+        // console.log(response);
         let itemarr = (response.data.resources).map((item) => {
           let itemobj = {};
           for (const element  of item.fields) {
@@ -235,8 +242,8 @@ export default {
           // itemarr.push(itemobj);
           return itemobj;
         });
-        console.log("转换值：");
-        console.log(itemarr);
+        // console.log("转换值：");
+        // console.log(itemarr);
         this.addDevices(itemarr);
           // this.configurations = response.data
       });   
@@ -264,20 +271,33 @@ export default {
       this.clusters.addMarker(marker);
     },
     async init_position() {   
-      await axios.get('/nova-vendor/laravel-nova-configuration/getAllConfigurations')
-      .then(response => {
-        console.log(response);
-          // this.configurations = response.data
-        response.data.map(item => {
-          // if(item.key == "LOCAL_LATITUDE") {
-          //   this.beiyong.lat = item.value;
-          // }
-          item.key == "LOCAL_LATITUDE" ? this.beiyong.lat = item.value : '';
-          item.key == "LOCAL_LONGTITUDE" ? this.beiyong.lng = item.value : '';
-        });
-        console.log(this.beiyong);
-        
-      });     
+      const gisPosition = localStorage.getItem("GISInitPosition");
+      // console.log('缓存 ', localStorage.getItem("GISInitPosition").length);
+      // console.log(gisPosition);
+      if(gisPosition == null) {
+        // console.log('没有缓存');
+        await axios.get('/nova-vendor/laravel-nova-configuration/getAllConfigurations')
+        .then(response => {
+          console.log(response);
+          response.data.map(item => {
+            item.key == "LOCAL_LATITUDE" ? this.beiyong.lat = item.value : '';
+            item.key == "LOCAL_LONGTITUDE" ? this.beiyong.lng = item.value : '';
+          });
+          console.log(this.beiyong);
+          let map = amapManager.getMap();
+          if(map == null) {
+            setTimeout(() => {
+              amapManager.getMap().setCenter(new AMap.LngLat(this.beiyong.lng, this.beiyong.lat));
+            }, 500);
+          } else {
+            amapManager.getMap().setCenter(new AMap.LngLat(this.beiyong.lng, this.beiyong.lat));
+          }
+          localStorage.setItem("GISInitPosition", JSON.stringify(this.beiyong));
+          // console.log('换地址了');
+          
+        });     
+
+      }
     }
   },
 };
