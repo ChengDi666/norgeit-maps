@@ -109,7 +109,7 @@ export default {
       this.values = this.$route.params;
       localStorage.setItem("GISInitPosition", JSON.stringify(this.values));
     }
-    console.log(this.values);
+    // console.log(this.values);
     let lng = this.values.lng, lat = this.values.lat;
     this.center = [lng, lat];
     this.position = [lng, lat];
@@ -121,7 +121,7 @@ export default {
       host: "http://localhost:6001",
     });
     window.Echo.listen("test-event", ".sendLocation", (res) => {
-      console.log(res);
+      // console.log(res);
       // console.log(this.markers);
       // console.log(this.clusters.getClustersCount());
 
@@ -146,8 +146,8 @@ export default {
       const arr = this.clusters.getMarkers();
       arr.map((item) => {
         if (item.F.vid === vid) {
-          console.log(item.F.vid);
-          console.log(item.getPosition());
+          // console.log(item.F.vid);
+          // console.log(item.getPosition());
           // item.setPosition([121.426274 + 0.05, 37.513546 + 0.05]);
           this.clusters.removeMarker(item);
         }
@@ -193,7 +193,7 @@ export default {
         markerArr.map((item) => {
           if (thisTime - new Date(item.time) > 300000) {
             // console.log(item);
-            console.log(item.id + " 断开连接");
+            // console.log(item.id + " 断开连接");
             this.upmarkers("tj" + item.id);
           }
         });
@@ -223,7 +223,7 @@ export default {
       });
       this.clusters = cluster;
       this.daxiao();
-      console.log(this.beiyong);
+      // console.log(this.beiyong);
       this.init_courses();
       // console.log(this.cun);
       if (this.cun.length !== 0) {
@@ -287,12 +287,12 @@ export default {
         // console.log('没有缓存');
         await axios.get('/nova-vendor/laravel-nova-configuration/getAllConfigurations')
         .then(response => {
-          console.log(response);
+          // console.log(response);
           response.data.map(item => {
             item.key == "LOCAL_LATITUDE" ? this.beiyong.lat = item.value : '';
             item.key == "LOCAL_LONGTITUDE" ? this.beiyong.lng = item.value : '';
           });
-          console.log(this.beiyong);
+          // console.log(this.beiyong);
           let map = amapManager.getMap();
           if(map == null) {
             setTimeout(() => {
