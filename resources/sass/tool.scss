@@ -1,12 +1,22 @@
 // Nova Tool CSS
 .my-amap-page{
-  //height:100%;
-  // min-height:700px;
-  // height:700px;
-  height: calc(100vh - 150px);
+  height: calc(100vh - 175px);
   width: 100%;
   box-shadow: 0 0 15px 5px #ccc;
 }
+
+
+
+
+
+@media (max-width: 992px) {
+  .my-amap-page{
+    height: calc(100vh - 155px);
+  }
+}
+
+
+
 //  隐藏高德地图图标
 .amap-logo{
   display: none!important;

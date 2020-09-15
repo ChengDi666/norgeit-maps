@@ -67,6 +67,15 @@ export default {
       values: {},
       events: {
         init(o) {
+          // 构造官方卫星、路网图层
+          var layer1 = new AMap.TileLayer.Satellite();  //  卫星
+          var layer2 =  new AMap.TileLayer.RoadNet();   //   路网
+          var layers = [
+              layer1,
+              layer2
+          ]
+          // 添加到地图上
+          o.add(layers);
           setTimeout(() => {
             self.ceshi();
           }, 1000);
@@ -196,7 +205,7 @@ export default {
         var zoom = map.getZoom(); //获取当前地图级别
         this.zoom = zoom;
         // console.log(this.clusters.getMarkers());
-        console.log(this.zoom);
+        // console.log(this.zoom);
       });
     },
     dellocalStorage() {
