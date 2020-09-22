@@ -71,8 +71,6 @@
 } */
 </style>
 <script>
-import Echo from "laravel-echo";
-import io from "socket.io-client";
 import { AMapManager, lazyAMapApiLoaderInstance } from "vue-amap";
 let amapManager = new AMapManager(); // 新建生成地图画布
 
@@ -94,6 +92,7 @@ export default {
       layers: [],
       isSatellite: true,
       isRoadNet: true,
+      infoWindows: {},
       events: {
         init(o) {
           // 构造官方卫星、路网图层
@@ -145,21 +144,6 @@ export default {
     this.position = [lng, lat];
     let that = this;
 
-    window.io = io;
-    window.Echo = new Echo({
-      broadcaster: "socket.io",
-      host: "http://localhost:6001",
-    });
-    window.Echo.listen("test-event", ".sendLocation", (res) => {
-      // console.log(res);
-      // console.log(this.markers);
-      // console.log(this.clusters.getClustersCount());
-
-      res.time = new Date();
-      this.addMarkers(res);
-
-      // console.log(this.clusters.getMarkers());
-    });
   },
 
   methods: {
@@ -200,8 +184,10 @@ export default {
         },
       });
       marker.content = "<p>ID：" + data.id + "</p><p>名称：测试</p>";
-      marker.on("click", this.markerClick);
-      marker.emit("click", { target: marker });
+      marker.on("mouseover", this.infoWindowOpen);
+      marker.emit("mouseover", { target: marker});
+      marker.on("mouseout", this.infoWindowClose);
+      marker.emit("mouseout", { target: marker});
       let a = true;
       const arr = this.cun.map((item) => {
         if (data.id == item.id) {
@@ -283,30 +269,31 @@ export default {
         });
         // console.log("转换值：");
         // console.log(itemarr);
-        this.addDevices(itemarr);
+        itemarr.map((item) => {
+          this.addDevices(item);
+        });
           // this.configurations = response.data
       });   
     },
-    addDevices(device) {
-      device.map((item) => {
-        this.tianjia(item);
-      });
-    },
-    tianjia(data) {
+    addDevices(data) {
       // console.log(data);
       let marker = new AMap.Marker({
         vid: `${data.id}`,
         position: [data.position.lng, data.position.lat],
-        title: `这是测试的点 ${data.id}`,
+        // title: "设备编号：" + data.deviceno + "\n 地址："+ data.address_id +" ",
         clickable: true,
         icon: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAADWklEQVRYR9WWWWxMYRTH/+dOZzpFI2jsZFJNSxpUQiQEnSEifZHQGYkmVFBCQpDYE2JriHgQImKJJYgOIRLxYJmpB/uD2mJfi9JF0Wp1lr/cGa2OznrvQ/lev3PO/3f/3znfdwXtvKSd9fFvA3QtbpwkVFaoLo0aKjm7DYtMsRy7h8Hc65vruVbGu2psitmYV75UGiLlRXUgbVPTfCrYoyZPGi3Y2VSELkl1URnONEzEfm8hbj1gIM6gIOfzSlOZJoBuWzzFAFfqAaDQUbMq2akJIG2Lp4SgvRkgpeZ1rBMI7L83WFocgHBt9arkzZoAuhU3PQCRrSZn9Iu/X+saiIqq35Lkkeo1yTMTBrCsp/m7yROxeeKyIhh0vXq1aVRCAAUub/7XOg5895kbExAKGyqQuuwMLibl1fFco+vvoLC+Ti/1PBEgU694aL6cOzYuafL/AVBw1XMDxEiVtic+6jKiAr2C+cKjx8aaZsTlgBrEy/Y+VFCuSz1QCG8Um9OSUBM2B/td9h/qbaoTolSxOnM1AdBtLyMxJCqAwQz4GiOGkHLEYCtJ/B5QK/rd9tMgpoStnpoO6ZsH/vgI1JQB35+HH0PBBsl1rtPkgO+KY6sIl7dpnMwiIKUH8LMK/HIfkjYCaKwCXxxtoyOU2WIrOagJgK78OYTsa50sI3aAb88Cn66G1JT0AsCQDD4L1fKRE4y2U5e1AVzJH0+RSy3JnbMgmfPA20vD252zDry/DfD9ucHFr2TI+JMvtAFcmppOg9KSLJbAwwi+jvC69p8MfHsG1D5q1vMKKlPE6vZqAyCEbnt98yjKwAVghbu1QGhdFbD24Z994qVicw6INkUx39iQUewyBJJVBL47D7y/0LYHOlnAx7uBptrg5SdwSa7TphfgNH+PogzbCNADvjwRtLrVkuwlQH05qIp/uBg8KvCwwXqqUB+Ay7Gd4LIQsYxZgCkVoB9orATM3cGqW0DlzVCoGHdAwKVodIGvcDkWEtzVJs6YCnToDfh+BiG8aquELgHmiNV5QJ8DpY48+nk+Fmi4fZ8PE40TnMHziLBiO1A6bRD9/pa5SgREkpQsGXPyqT4AV6EZqL9DBH9O410CPAQ6DhfrocgvVTw9EK+g1riYR6C1cLx57Q7wCyGPSzCh+iY7AAAAAElFTkSuQmCC',
         offset: new AMap.Pixel(-13, -30),
         events: {
         },
       });
-      marker.content = "<p>设备编号：" + data.deviceno + "</p><p>地址："+ data.position.address +"</p>";
-      marker.on("click", this.markerClick);
-      marker.emit("click", { target: marker });
+      marker.content = "<p>设备编号：" + data.deviceno + "</p><p>地址："+ data.address_id +"</p>";
+      // marker.on("click", this.markerClick);
+      // marker.emit("click", { target: marker });
+      marker.on("mouseover", this.infoWindowOpen);
+      marker.emit("mouseover", { target: marker});
+      marker.on("mouseout", this.infoWindowClose);
+      marker.emit("mouseout", { target: marker});
       this.clusters.addMarker(marker);
     },
     async init_position() {   
@@ -338,7 +325,7 @@ export default {
 
       }
     },
-    Satellite() {
+    Satellite() { //  卫星显示和隐藏
       this.isSatellite = !this.isSatellite;
       // console.log(this.isSatellite);
       // console.log(this.layers);
@@ -350,10 +337,27 @@ export default {
       } else map.remove(this.layers)
       // this.isSatellite ? map.add(this.layers) : map.remove(this.layers);
     },
-    RoadNet() {
+    RoadNet() { //  路网显示和隐藏
       this.isRoadNet = !this.isRoadNet;
       let map = amapManager.getMap();
       this.isRoadNet ? map.add(this.layers[1]) : map.remove(this.layers[1]);
+    },
+    infoWindowOpen(e) { //  鼠标悬停，打开信息窗
+      // console.log(e);
+      if (e.lnglat === undefined) return; //  加载时，不显示
+      var infoWindow = new AMap.InfoWindow({ offset: new AMap.Pixel(0, -30), closeWhenClickMap: true });
+      // console.log('鼠标移入');
+      infoWindow.setContent(e.target.content);
+      infoWindow.open(amapManager.getMap(), e.target.getPosition());
+      this.infoWindows = infoWindow;
+      // console.log(infoWindow);
+
+    },
+    infoWindowClose(e) { //  鼠标移除，关闭信息窗
+      // console.log(e);
+      if (e.lnglat === undefined) return; //  加载时，不显示
+      // console.log('鼠标移出');
+      this.infoWindows.close();
     }
 
   },

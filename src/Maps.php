@@ -26,12 +26,6 @@ class Maps extends Tool
         $lats['lat'] = $lat;
         $lats['lng'] = $lng;
         
-        \Log::info($lng);
-        \Log::info($this->component);
-        // return $this->withMeta([
-        //     'lat' => $lat,
-        //     'lng' => $lng
-        // ]);
     }
 
 
