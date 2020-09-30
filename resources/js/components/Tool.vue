@@ -21,14 +21,18 @@
                 :key="index"
                 :position="[item.lng,item.lat]"
         :extData="item" ></el-amap-marker>-->
-        <el-amap-marker
+
+
+        <!-- <el-amap-marker
           v-for="(marker, index) in markers"
           :vid="marker.vid"
           :key="index"
           :position="marker.position"
           :content="marker.content"
           :events="marker.events"
-        ></el-amap-marker>
+        ></el-amap-marker> -->
+
+
         <!-- <el-amap-info-window
           v-if="window"
           :position="window.position"
@@ -73,39 +77,46 @@
 <script>
 import { AMapManager, lazyAMapApiLoaderInstance } from "vue-amap";
 let amapManager = new AMapManager(); // 新建生成地图画布
+let mqtt = require('mqtt');
 
 export default {
   props: ["resource", "resourceName", "resourceId", "field", "card"],
   data() {
     let self = this;
     return {
-      cun: [],
+      userMessage: [],
       beiyong: {lat: "32.059358",lng: "118.796628"},
-      markers: [],
+      // markers: [],
       markerRefs: [],
       amapManager,
       zoom: 12,
       center: [],
       position: [],
       clusters: {},
+      userClusters: {},
       values: {},
       layers: [],
       isSatellite: true,
       isRoadNet: true,
+      client: {},
       infoWindows: {},
+      myMap: {},
       events: {
         init(o) {
           // 构造官方卫星、路网图层
-          var layer1 = new AMap.TileLayer.Satellite();  //  卫星
-          var layer2 =  new AMap.TileLayer.RoadNet();   //   路网
+          var layer1 = new AMap.TileLayer.Satellite({ opacity: 0.8 });  //  卫星
+          var layer2 =  new AMap.TileLayer.RoadNet({ opacity: 0.5 });   //   路网
           var layers = [
               layer1,
               layer2
           ]
           // 添加到地图上
-          o.add(layers);
+          if(self.isSatellite) {
+            o.add(layers);
+          }
           self.layers = layers;
           setTimeout(() => {
+            self.init_mqtt();
             self.ceshi();
           }, 1000);
         },
@@ -113,17 +124,19 @@ export default {
     };
   },
   created() {
-    this.cun = JSON.parse(localStorage.getItem("requestMarker")) ? JSON.parse(localStorage.getItem("requestMarker")) : [];
+    this.userMessage = JSON.parse(localStorage.getItem("requestMarker")) ? JSON.parse(localStorage.getItem("requestMarker")) : [];
     this.values = JSON.parse(localStorage.getItem("GISInitPosition")) ? JSON.parse(localStorage.getItem("GISInitPosition")) : {};
+    this.isSatellite = JSON.parse(localStorage.getItem('isSatellite'));
   },
   mounted() {
+    // this.init_mqtt();
     this.init_position();
     // console.log(this);
     // console.log('field  ' +this.field);
     // console.log(this.$route.params);
     setInterval(() => {
-      this.dome();
-    }, 200000);
+      this.regularCheck();
+    }, 60000);
 
     if(this.$route.params.lat == undefined) {   //  刷新
       if(this.values.lat == undefined) {
@@ -147,6 +160,155 @@ export default {
   },
 
   methods: {
+    init_mqtt(){
+      this.client = mqtt.connect('ws://iot.shlj.ltd:8083/mqtt', {
+          username: "test",
+          password: "test"
+      });
+      //订阅后端给你发的字段 在on里面接收
+      // console.log('准备开启mqtt链接');
+      this.client.on('connect', () => {
+        console.log('连接成功');
+          this.client.subscribe('tttt', function (err) {
+              if (!err) {
+                  console.log("订阅成功:" + 'tttt');
+              }
+          })
+      });
+      this.client.on('message', (topic, message) => {
+          // console.log('接受消息');
+          if (topic === 'tttt') {
+            //DOSOMETHING
+            // console.log(message);
+            const mes = this.Utf8ArrayToStr(message)
+            // console.log(mes);
+            if(mes) {
+              const users = JSON.parse(mes)
+              // console.log(users);
+              if(users.lat != 0 && users.lng != 0) {
+                users.time = new Date();
+                this.addMarkers(users);
+                // for (let index = 0; index < 5; index++) {
+                //   this.addMarkers({
+                //     id: users.id+index+1,
+                //     lat: users.lat+Math.random(),
+                //     lng: users.lng+Math.random(),
+                //     name: users.name+index,
+                //     time: users.time
+                //   });
+                // }
+              } else {
+                // console.log('下线了');
+                // console.log(users);
+                this.delMarker("DDY" + users.id);
+                this.delCache(users.id);
+              }
+            }
+          }
+      })
+      //连接断开
+      // client.end()
+    },
+    addMarkers(data) {
+      // console.log('数据');
+      // console.log(data);
+      this.delMarker(`DDY${data.id}`);
+      let marker = new AMap.Marker({
+        vid: `DDY${data.id}`,
+        position: [data.lng, data.lat],
+        // title: `我的名字： ${data.name}`,
+        clickable: true,
+        icon: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAClklEQVRYR+2WQWjTUBjH/1+2JN3JXSamFRxDStohCnOiIOhQUHSiIoooKIha8DTcwZNQT14G4k2nXvQgeHCiB72ovXlRQXFNO3Zbm+4gO7jD2qTLJ8lWqO3SvBFLUZZTePm/7/973/e990Lo8EMd9sdfAYhWkndBfBbAZhC+OVW+Pd+Ty4gsLjRA1Eo8AXCl0cyRpcF5ms4GQYQC0MqDR0ly3vqYTEvy4nCBCkutIMIBWMkJAo/7GUjs7Cyo+e//MUDrEsxI8uKutpbATW3UTr4D85E/0kz4SaDzRTn7vq1NWAuuVZIXQXyVCHECXvCy88CM5PNB5u73UE0oYhCkaQKI2okpME41TLxmKsZjd2wbJzTb4hSIRgEMBRkAWCBgloFHtRj1c5oAtHJijCTcqxd1MXbMqcaPAR7YVLZVt64ixs1szHdMNZcOAGg+XEzF8EBjVvIhg68LrNpX4izzSP0x3VyCSlwHdRl1Eb6YirFbs/QhAn0OY+41HeF+UTbGanGaAPq5P2LZPSUAvStdSpNFJZvSLH2CQL6nnjAY8WtTzp30BfD2tpX4BGCv+87gVEnJTUZtfQ5MW4WNfIQMZEqKMdISoHFurKqPskNv6ibdcIBzBBwMBCJOg3EAIM80EGALb+9DuXuwPrDULd0E84naWESu9C7Z6itxANoP4HAgQKysj7NEtwD0+a+MP5hK7pBmJT4KAzjSPtDKcd0yAyJBCbhcVIynIlpvEcRpdmgPEY4FAgRlgIBnRcW45AZaDwBAw2AcDwRwBWv1gDtuRapfF2j2V600bQMI7OpVwQbARgb+rQywFAf4wupt+LIoG2fWdRestTPcDIjsGCLOwMEMJDrt6R2eMtXc89AAIuYimo7/lP4Gi1g0MPX9g/AAAAAASUVORK5CYII=',
+        // events: {
+        //   click: (o) => {
+        //       console.log(o);
+        //   },
+        // },
+      });
+      marker.content = "<p>ID：" + data.id + "</p><p>用户名：" + data.name + "</p>";
+      marker.on("mouseover", this.infoWindowOpen);
+      marker.emit("mouseover", { target: marker});
+      marker.on("mouseout", this.infoWindowClose);
+      marker.emit("mouseout", { target: marker});
+      let isOk = true;
+      const arr = this.userMessage.map((item) => {
+        if (data.id == item.id) {
+          isOk = false;
+          return data;
+        }
+        return item;
+      });
+      if (isOk) this.userMessage.push(data);
+      else this.userMessage = arr;
+      // console.log(this.userMessage);
+      // this.myMap.add(marker);
+      this.userClusters.addMarker(marker);
+      localStorage.setItem("requestMarker", JSON.stringify(this.userMessage));
+    },
+    cece(context) {
+      var count = this.userClusters.kb.length;
+      var factor = Math.pow(context.count / count, 1 / 18);
+      var div = document.createElement('div');
+      var Hue = 180 - factor * 180;
+      var bgColor = 'hsla(' + Hue + ',100%,50%,0.7)';
+      var fontColor = 'hsla(' + Hue + ',100%,20%,1)';
+      var borderColor = 'hsla(' + Hue + ',100%,40%,1)';
+      var shadowColor = 'hsla(' + Hue + ',100%,50%,1)';
+      div.style.backgroundColor = bgColor;
+      var size = Math.round(15 + Math.pow(context.count / count, 1 / 5) * 20);
+      div.style.width = div.style.height = size + 'px';
+      div.style.border = 'solid 1px ' + borderColor;
+      div.style.borderRadius = size / 2 + 'px';
+      div.style.boxShadow = '0 0 1px ' + shadowColor;
+      div.innerHTML = context.count;
+      div.style.lineHeight = size + 'px';
+      div.style.color = fontColor;
+      div.style.fontSize = '14px';
+      div.style.textAlign = 'center';
+      context.marker.setOffset(new AMap.Pixel(-size / 2, -size / 2));
+      context.marker.setContent(div)
+    },
+    delMarker(id) {
+      // const arr = this.myMap.getAllOverlays('marker');
+      const arr = this.userClusters.kb;
+      if(arr) {
+        // console.log('所有的点');
+        // console.log(arr);
+        arr.forEach(element => {
+          if(id === element.Ce.vid) { //  点存在删除
+            // this.myMap.remove(element);
+            // console.log('删除地图点');
+            // console.log(element);
+            this.userClusters.removeMarker(element);
+          }
+        });
+      }
+    },
+    regularCheck() {  //  判断有效期
+      const markerArr = JSON.parse(localStorage.getItem("requestMarker"));
+      const thisTime = new Date();
+      if (markerArr) {
+        markerArr.map((item) => {
+          if (thisTime - new Date(item.time) > 300000) {
+            // console.log(item);
+            console.log("DDY" + item.id + " 连接超时");
+            this.delMarker("DDY" + item.id);
+            this.delCache(item.id);
+          }
+        });
+      }
+    },
+    delCache(id) {  //  清除指定缓存和存储数组
+      this.userMessage.forEach((element, index) => { //  删除数组 和缓存 里的点信息
+        if(id === element.id) {
+          // console.log('删除的数据');
+          // console.log(element);
+          this.userMessage.splice(index, 1)
+          // console.log(this.userMessage);
+          localStorage.setItem("requestMarker", JSON.stringify(this.userMessage));
+        }
+      });
+    },
     markerClick(e) {
       // console.log(e);
       let map = amapManager._map;
@@ -155,65 +317,6 @@ export default {
       if (e.lnglat === undefined) return; //  加载点，不显示
       infoWindow.setContent(e.target.content);
       infoWindow.open(map, e.target.getPosition());
-    },
-    upmarkers(vid) {
-      const arr = this.clusters.getMarkers();
-      arr.map((item) => {
-        if (item.F.vid === vid) {
-          // console.log(item.F.vid);
-          // console.log(item.getPosition());
-          // item.setPosition([121.426274 + 0.05, 37.513546 + 0.05]);
-          this.clusters.removeMarker(item);
-        }
-      });
-    },
-    addMarkers(data) {
-      this.upmarkers(`tj${data.id}`);
-      data.lat = data.lat - (Math.random() - 0.5) * 0.02;
-      data.lng = data.lng - (Math.random() - 0.5) * 0.02;
-      let marker = new AMap.Marker({
-        vid: `tj${data.id}`,
-        position: [data.lng, data.lat],
-        title: `这是测试的点 ${data.id}`,
-        clickable: true,
-        events: {
-          // click: (o) => {
-          //     console.log(o);
-          //     alert('click marker');
-          // },
-        },
-      });
-      marker.content = "<p>ID：" + data.id + "</p><p>名称：测试</p>";
-      marker.on("mouseover", this.infoWindowOpen);
-      marker.emit("mouseover", { target: marker});
-      marker.on("mouseout", this.infoWindowClose);
-      marker.emit("mouseout", { target: marker});
-      let a = true;
-      const arr = this.cun.map((item) => {
-        if (data.id == item.id) {
-          a = false;
-          return data;
-        }
-        return item;
-      });
-      if (a) this.cun.push(data);
-      else this.cun = arr;
-      // console.log(this.cun);
-      this.clusters.addMarker(marker);
-      localStorage.setItem("requestMarker", JSON.stringify(this.cun));
-    },
-    dome() {//  判断有效期0
-      const markerArr = JSON.parse(localStorage.getItem("requestMarker"));
-      const thisTime = new Date();
-      if (markerArr) {
-        markerArr.map((item) => {
-          if (thisTime - new Date(item.time) > 300000) {
-            // console.log(item);
-            // console.log(item.id + " 断开连接");
-            this.upmarkers("tj" + item.id);
-          }
-        });
-      }
     },
     daxiao() {
       let map = amapManager._map;
@@ -226,11 +329,12 @@ export default {
     },
     dellocalStorage() {
       localStorage.removeItem("requestMarker");
-      this.cun = [];
+      this.userMessage = [];
     },
 
     ceshi() {
       let o = amapManager.getMap();
+      this.myMap = o;
       // console.log(o);
       // console.log(this.markerRefs);
       let cluster = new AMap.MarkerClusterer(o, this.markerRefs, {
@@ -238,23 +342,24 @@ export default {
         maxZoom: 16,
       });
       this.clusters = cluster;
+      let userCluster = new AMap.MarkerClusterer(o, [], {
+        gridSize: 80,
+        maxZoom: 16,
+        renderClusterMarker: this.cece
+      });
+      this.userClusters = userCluster;
       this.daxiao();
       // console.log(this.beiyong);
       this.init_courses();
-      // console.log(this.cun);
-      if (this.cun.length !== 0) {
-        this.cun.map((item) => {
+      // console.log(this.userMessage);
+      if (this.userMessage.length !== 0) {
+        this.userMessage.map((item) => {
           this.addMarkers(item);
         });
       }
     },
     init_courses()
     {
-      // axios.get('https://yantai.api.shlj.ltd/api/devices?position=').then((res) => {
-      //   console.log(res);
-      //   this.devices = res.data.data;
-      //   // this.addDevices(res.data.data);
-      // });
       axios.get('/nova-api/devices?search=&filters=W10%3D&orderBy=&perPage=25&trashed=&page=1&relationshipType=')
       .then(response => {
         // console.log(response);
@@ -327,6 +432,7 @@ export default {
     },
     Satellite() { //  卫星显示和隐藏
       this.isSatellite = !this.isSatellite;
+      localStorage.setItem('isSatellite', this.isSatellite);
       // console.log(this.isSatellite);
       // console.log(this.layers);
       let map = amapManager.getMap();
@@ -345,7 +451,7 @@ export default {
     infoWindowOpen(e) { //  鼠标悬停，打开信息窗
       // console.log(e);
       if (e.lnglat === undefined) return; //  加载时，不显示
-      var infoWindow = new AMap.InfoWindow({ offset: new AMap.Pixel(0, -30), closeWhenClickMap: true });
+      var infoWindow = new AMap.InfoWindow({ offset: new AMap.Pixel(5, -30), closeWhenClickMap: true });
       // console.log('鼠标移入');
       infoWindow.setContent(e.target.content);
       infoWindow.open(amapManager.getMap(), e.target.getPosition());
@@ -358,9 +464,42 @@ export default {
       if (e.lnglat === undefined) return; //  加载时，不显示
       // console.log('鼠标移出');
       this.infoWindows.close();
-    }
-
+    },
+    Utf8ArrayToStr(array) {
+        var out, i, len, c;
+        var char2, char3;
+    
+        out = "";
+        len = array.length;
+        i = 0;
+        while(i < len) {
+        c = array[i++];
+        switch(c >> 4)
+        { 
+          case 0: case 1: case 2: case 3: case 4: case 5: case 6: case 7:
+            // 0xxxxxxx
+            out += String.fromCharCode(c);
+            break;
+          case 12: case 13:
+            // 110x xxxx   10xx xxxx
+            char2 = array[i++];
+            out += String.fromCharCode(((c & 0x1F) << 6) | (char2 & 0x3F));
+            break;
+          case 14:
+            // 1110 xxxx  10xx xxxx  10xx xxxx
+            char2 = array[i++];
+            char3 = array[i++];
+            out += String.fromCharCode(((c & 0x0F) << 12) |
+                          ((char2 & 0x3F) << 6) |
+                          ((char3 & 0x3F) << 0));
+            break;
+        }
+        }
+    
+        return out;
+    },
   },
+    
 };
 </script>
 
