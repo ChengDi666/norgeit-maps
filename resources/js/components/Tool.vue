@@ -161,7 +161,7 @@ export default {
 
   methods: {
     init_mqtt(){
-      this.client = mqtt.connect('wss://iot.shlj.ltd/mqtt', {
+      this.client = mqtt.connect('ws://iot.ljfl.ltd:8083/mqtt', {
           username: "test",
           password: "test"
       });
