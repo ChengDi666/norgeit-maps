@@ -161,7 +161,7 @@ export default {
 
   methods: {
     init_mqtt(){
-      this.client = mqtt.connect('ws://iot.ljfl.ltd:8083/mqtt', {
+      this.client = mqtt.connect('wss://iot.ljfl.ltd:443/mqtt', {
           username: "test",
           password: "test"
       });
@@ -210,26 +210,24 @@ export default {
       // client.end()
     },
     addMarkers(data) {
-      // console.log('数据');
       // console.log(data);
       this.delMarker(`DDY${data.id}`);
       let marker = new AMap.Marker({
         vid: `DDY${data.id}`,
         position: [data.lng, data.lat],
-        // title: `我的名字： ${data.name}`,
+        title: `鼠标左键双击，查看用户详情`,
         clickable: true,
         icon: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAClklEQVRYR+2WQWjTUBjH/1+2JN3JXSamFRxDStohCnOiIOhQUHSiIoooKIha8DTcwZNQT14G4k2nXvQgeHCiB72ovXlRQXFNO3Zbm+4gO7jD2qTLJ8lWqO3SvBFLUZZTePm/7/973/e990Lo8EMd9sdfAYhWkndBfBbAZhC+OVW+Pd+Ty4gsLjRA1Eo8AXCl0cyRpcF5ms4GQYQC0MqDR0ly3vqYTEvy4nCBCkutIMIBWMkJAo/7GUjs7Cyo+e//MUDrEsxI8uKutpbATW3UTr4D85E/0kz4SaDzRTn7vq1NWAuuVZIXQXyVCHECXvCy88CM5PNB5u73UE0oYhCkaQKI2okpME41TLxmKsZjd2wbJzTb4hSIRgEMBRkAWCBgloFHtRj1c5oAtHJijCTcqxd1MXbMqcaPAR7YVLZVt64ixs1szHdMNZcOAGg+XEzF8EBjVvIhg68LrNpX4izzSP0x3VyCSlwHdRl1Eb6YirFbs/QhAn0OY+41HeF+UTbGanGaAPq5P2LZPSUAvStdSpNFJZvSLH2CQL6nnjAY8WtTzp30BfD2tpX4BGCv+87gVEnJTUZtfQ5MW4WNfIQMZEqKMdISoHFurKqPskNv6ibdcIBzBBwMBCJOg3EAIM80EGALb+9DuXuwPrDULd0E84naWESu9C7Z6itxANoP4HAgQKysj7NEtwD0+a+MP5hK7pBmJT4KAzjSPtDKcd0yAyJBCbhcVIynIlpvEcRpdmgPEY4FAgRlgIBnRcW45AZaDwBAw2AcDwRwBWv1gDtuRapfF2j2V600bQMI7OpVwQbARgb+rQywFAf4wupt+LIoG2fWdRestTPcDIjsGCLOwMEMJDrt6R2eMtXc89AAIuYimo7/lP4Gi1g0MPX9g/AAAAAASUVORK5CYII=',
-        // events: {
-        //   click: (o) => {
-        //       console.log(o);
-        //   },
-        // },
       });
-      marker.content = "<p>ID：" + data.id + "</p><p>用户名：" + data.name + "</p>";
+      marker.content = `<p>用户名：${data.name}</p><p>手机：${data.phonenumber}</p>`;
       marker.on("mouseover", this.infoWindowOpen);
       marker.emit("mouseover", { target: marker});
       marker.on("mouseout", this.infoWindowClose);
-      marker.emit("mouseout", { target: marker});
+      marker.emit("mouseout", { target: marker});      
+      marker.on("dblclick", () => { //  左双击跳转
+        window.location.href = '/resources/users/' + data.id
+        // window.open("//www.baidu.com");    
+      });
       let isOk = true;
       const arr = this.userMessage.map((item) => {
         if (data.id == item.id) {
@@ -244,29 +242,6 @@ export default {
       // this.myMap.add(marker);
       this.userClusters.addMarker(marker);
       localStorage.setItem("requestMarker", JSON.stringify(this.userMessage));
-    },
-    cece(context) {
-      var count = this.userClusters.kb.length;
-      var factor = Math.pow(context.count / count, 1 / 18);
-      var div = document.createElement('div');
-      var Hue = 180 - factor * 180;
-      var bgColor = 'hsla(' + Hue + ',100%,50%,0.7)';
-      var fontColor = 'hsla(' + Hue + ',100%,20%,1)';
-      var borderColor = 'hsla(' + Hue + ',100%,40%,1)';
-      var shadowColor = 'hsla(' + Hue + ',100%,50%,1)';
-      div.style.backgroundColor = bgColor;
-      var size = Math.round(15 + Math.pow(context.count / count, 1 / 5) * 20);
-      div.style.width = div.style.height = size + 'px';
-      div.style.border = 'solid 1px ' + borderColor;
-      div.style.borderRadius = size / 2 + 'px';
-      div.style.boxShadow = '0 0 1px ' + shadowColor;
-      div.innerHTML = context.count;
-      div.style.lineHeight = size + 'px';
-      div.style.color = fontColor;
-      div.style.fontSize = '14px';
-      div.style.textAlign = 'center';
-      context.marker.setOffset(new AMap.Pixel(-size / 2, -size / 2));
-      context.marker.setContent(div)
     },
     delMarker(id) {
       // const arr = this.myMap.getAllOverlays('marker');
@@ -323,7 +298,7 @@ export default {
       map.on("zoomchange", () => {
         var zoom = map.getZoom(); //获取当前地图级别
         this.zoom = zoom;
-        // console.log(this.clusters.getMarkers());
+        // console.log(this.deviceClusters.getMarkers());
         // console.log(this.zoom);
       });
     },
@@ -337,11 +312,11 @@ export default {
       this.myMap = o;
       // console.log(o);
       // console.log(this.markerRefs);
-      let cluster = new AMap.MarkerClusterer(o, this.markerRefs, {
+      let deviceClusters = new AMap.MarkerClusterer(o, this.markerRefs, {
         gridSize: 80,
         maxZoom: 16,
       });
-      this.clusters = cluster;
+      this.deviceClusters = deviceClusters;
       let userCluster = new AMap.MarkerClusterer(o, [], {
         gridSize: 80,
         maxZoom: 16,
@@ -385,7 +360,7 @@ export default {
       let marker = new AMap.Marker({
         vid: `${data.id}`,
         position: [data.position.lng, data.position.lat],
-        // title: "设备编号：" + data.deviceno + "\n 地址："+ data.address_id +" ",
+        title: "鼠标左键双击，查看设备详情",
         clickable: true,
         icon: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAADWklEQVRYR9WWWWxMYRTH/+dOZzpFI2jsZFJNSxpUQiQEnSEifZHQGYkmVFBCQpDYE2JriHgQImKJJYgOIRLxYJmpB/uD2mJfi9JF0Wp1lr/cGa2OznrvQ/lev3PO/3f/3znfdwXtvKSd9fFvA3QtbpwkVFaoLo0aKjm7DYtMsRy7h8Hc65vruVbGu2psitmYV75UGiLlRXUgbVPTfCrYoyZPGi3Y2VSELkl1URnONEzEfm8hbj1gIM6gIOfzSlOZJoBuWzzFAFfqAaDQUbMq2akJIG2Lp4SgvRkgpeZ1rBMI7L83WFocgHBt9arkzZoAuhU3PQCRrSZn9Iu/X+saiIqq35Lkkeo1yTMTBrCsp/m7yROxeeKyIhh0vXq1aVRCAAUub/7XOg5895kbExAKGyqQuuwMLibl1fFco+vvoLC+Ti/1PBEgU694aL6cOzYuafL/AVBw1XMDxEiVtic+6jKiAr2C+cKjx8aaZsTlgBrEy/Y+VFCuSz1QCG8Um9OSUBM2B/td9h/qbaoTolSxOnM1AdBtLyMxJCqAwQz4GiOGkHLEYCtJ/B5QK/rd9tMgpoStnpoO6ZsH/vgI1JQB35+HH0PBBsl1rtPkgO+KY6sIl7dpnMwiIKUH8LMK/HIfkjYCaKwCXxxtoyOU2WIrOagJgK78OYTsa50sI3aAb88Cn66G1JT0AsCQDD4L1fKRE4y2U5e1AVzJH0+RSy3JnbMgmfPA20vD252zDry/DfD9ucHFr2TI+JMvtAFcmppOg9KSLJbAwwi+jvC69p8MfHsG1D5q1vMKKlPE6vZqAyCEbnt98yjKwAVghbu1QGhdFbD24Z994qVicw6INkUx39iQUewyBJJVBL47D7y/0LYHOlnAx7uBptrg5SdwSa7TphfgNH+PogzbCNADvjwRtLrVkuwlQH05qIp/uBg8KvCwwXqqUB+Ay7Gd4LIQsYxZgCkVoB9orATM3cGqW0DlzVCoGHdAwKVodIGvcDkWEtzVJs6YCnToDfh+BiG8aquELgHmiNV5QJ8DpY48+nk+Fmi4fZ8PE40TnMHziLBiO1A6bRD9/pa5SgREkpQsGXPyqT4AV6EZqL9DBH9O410CPAQ6DhfrocgvVTw9EK+g1riYR6C1cLx57Q7wCyGPSzCh+iY7AAAAAElFTkSuQmCC',
         offset: new AMap.Pixel(-13, -30),
@@ -398,8 +373,12 @@ export default {
       marker.on("mouseover", this.infoWindowOpen);
       marker.emit("mouseover", { target: marker});
       marker.on("mouseout", this.infoWindowClose);
-      marker.emit("mouseout", { target: marker});
-      this.clusters.addMarker(marker);
+      marker.emit("mouseout", { target: marker});      
+      marker.on("dblclick", () => { //  左双击跳转
+        window.location.href = '/resources/devices/' + data.id
+        // window.open("//www.baidu.com");    
+      });
+      this.deviceClusters.addMarker(marker);
     },
     async init_position() {   
       const gisPosition = localStorage.getItem("GISInitPosition");
@@ -465,7 +444,7 @@ export default {
       // console.log('鼠标移出');
       this.infoWindows.close();
     },
-    Utf8ArrayToStr(array) {
+    Utf8ArrayToStr(array) { //  Utf8Array 转字符串
         var out, i, len, c;
         var char2, char3;
     
@@ -497,6 +476,29 @@ export default {
         }
     
         return out;
+    },
+    cece(context) { //  用户聚合样式
+      var count = this.userClusters.kb.length;
+      var factor = Math.pow(context.count / count, 1 / 18);
+      var div = document.createElement('div');
+      var Hue = 180 - factor * 180;
+      var bgColor = 'hsla(' + Hue + ',100%,50%,0.7)';
+      var fontColor = 'hsla(' + Hue + ',100%,20%,1)';
+      var borderColor = 'hsla(' + Hue + ',100%,40%,1)';
+      var shadowColor = 'hsla(' + Hue + ',100%,50%,1)';
+      div.style.backgroundColor = bgColor;
+      var size = Math.round(15 + Math.pow(context.count / count, 1 / 5) * 20);
+      div.style.width = div.style.height = size + 'px';
+      div.style.border = 'solid 1px ' + borderColor;
+      div.style.borderRadius = size / 2 + 'px';
+      div.style.boxShadow = '0 0 1px ' + shadowColor;
+      div.innerHTML = context.count;
+      div.style.lineHeight = size + 'px';
+      div.style.color = fontColor;
+      div.style.fontSize = '14px';
+      div.style.textAlign = 'center';
+      context.marker.setOffset(new AMap.Pixel(-size / 2, -size / 2));
+      context.marker.setContent(div)
     },
   },
     
