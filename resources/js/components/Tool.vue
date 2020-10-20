@@ -69,18 +69,13 @@
       </div>
     </div>
 </template>
-  <style>
-/* .amap-demo {
-  height: calc(100vh - 110px);
-} */
-</style>
+
 <script>
 import { AMapManager, lazyAMapApiLoaderInstance } from "vue-amap";
 let amapManager = new AMapManager(); // 新建生成地图画布
 let mqtt = require('mqtt');
 
 export default {
-  props: ["resource", "resourceName", "resourceId", "field"],
   data() {
     let self = this;
     return {
