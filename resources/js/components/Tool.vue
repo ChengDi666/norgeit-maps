@@ -80,7 +80,7 @@ let amapManager = new AMapManager(); // 新建生成地图画布
 let mqtt = require('mqtt');
 
 export default {
-  props: ["resource", "resourceName", "resourceId", "field", "card"],
+  props: ["resource", "resourceName", "resourceId", "field"],
   data() {
     let self = this;
     return {
