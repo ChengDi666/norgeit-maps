@@ -9,37 +9,6 @@
         class="amap-demo"
         :events="events"
       >
-        <!-- <el-amap style="height:100%;width:100%;min-height: 500px;"
-                     :center="center"
-                     :zoom="zoom" 
-                     :amap-manager="amapManager"
-        :events="events">-->
-        <!-- <el-amap-marker v-if="position.length" vid="component-marker" :position="position"></el-amap-marker> -->
-        <!-- <el-amap-marker
-                vid="component-marker"
-                v-for="(item,index) in userList"
-                :key="index"
-                :position="[item.lng,item.lat]"
-        :extData="item" ></el-amap-marker>-->
-
-
-        <!-- <el-amap-marker
-          v-for="(marker, index) in markers"
-          :vid="marker.vid"
-          :key="index"
-          :position="marker.position"
-          :content="marker.content"
-          :events="marker.events"
-        ></el-amap-marker> -->
-
-
-        <!-- <el-amap-info-window
-          v-if="window"
-          :position="window.position"
-          :visible="window.visible"
-          :offset="window.offset"
-          :content="window.content"
-        ></el-amap-info-window> -->
       </el-amap>
       <div class="satellite">
         <a class="layer_item" @click="Satellite()"  v-bind:class="{'item_active': isSatellite}">
@@ -112,7 +81,7 @@ export default {
           self.layers = layers;
           setTimeout(() => {
             self.init_mqtt();
-            self.ceshi();
+            self.init_map();
           }, 1000);
         },
       },
@@ -124,12 +93,8 @@ export default {
     this.isSatellite = JSON.parse(localStorage.getItem('isSatellite'));
   },
   mounted() {
-    // this.init_mqtt();
     this.init_position();
-    // console.log(this);
-    // console.log('field  ' +this.field);
-    // console.log(this.$route.params);
-    setInterval(() => {
+    setInterval(() => { //  一分钟检测一次
       this.regularCheck();
     }, 60000);
 
@@ -137,12 +102,9 @@ export default {
       if(this.values.lat == undefined) {
         //  没有缓存
         this.values = this.beiyong;
-        // console.log('没有缓存,要请求数据');
       }
-      // console.log('刷新取值');
     } else {
       //  点击传值
-      // console.log('点击传值');
       this.values = this.$route.params;
       localStorage.setItem("GISInitPosition", JSON.stringify(this.values));
     }
@@ -183,15 +145,6 @@ export default {
               if(users.lat != 0 && users.lng != 0) {
                 users.time = new Date();
                 this.addMarkers(users);
-                // for (let index = 0; index < 5; index++) {
-                //   this.addMarkers({
-                //     id: users.id+index+1,
-                //     lat: users.lat+Math.random(),
-                //     lng: users.lng+Math.random(),
-                //     name: users.name+index,
-                //     time: users.time
-                //   });
-                // }
               } else {
                 // console.log('下线了');
                 // console.log(users);
@@ -221,7 +174,6 @@ export default {
       marker.emit("mouseout", { target: marker});      
       marker.on("dblclick", () => { //  左双击跳转
         window.location.href = '/resources/users/' + data.id
-        // window.open("//www.baidu.com");    
       });
       let isOk = true;
       const arr = this.userMessage.map((item) => {
@@ -239,16 +191,10 @@ export default {
       localStorage.setItem("requestMarker", JSON.stringify(this.userMessage));
     },
     delMarker(id) {
-      // const arr = this.myMap.getAllOverlays('marker');
       const arr = this.userClusters.kb;
       if(arr) {
-        // console.log('所有的点');
-        // console.log(arr);
         arr.forEach(element => {
           if(id === element.Ce.vid) { //  点存在删除
-            // this.myMap.remove(element);
-            // console.log('删除地图点');
-            // console.log(element);
             this.userClusters.removeMarker(element);
           }
         });
@@ -281,17 +227,15 @@ export default {
     },
     markerClick(e) {
       // console.log(e);
-      let map = amapManager._map;
       var infoWindow = new AMap.InfoWindow({ offset: new AMap.Pixel(0, -30) });
       // console.log(infoWindow.getIsOpen());
       if (e.lnglat === undefined) return; //  加载点，不显示
       infoWindow.setContent(e.target.content);
-      infoWindow.open(map, e.target.getPosition());
+      infoWindow.open(this.myMap, e.target.getPosition());
     },
     daxiao() {
-      let map = amapManager._map;
-      map.on("zoomchange", () => {
-        var zoom = map.getZoom(); //获取当前地图级别
+      this.myMap.on("zoomchange", () => {
+        var zoom = this.myMap.getZoom(); //获取当前地图级别
         this.zoom = zoom;
         // console.log(this.deviceClusters.getMarkers());
         // console.log(this.zoom);
@@ -302,17 +246,15 @@ export default {
       this.userMessage = [];
     },
 
-    ceshi() {
-      let o = amapManager.getMap();
-      this.myMap = o;
-      // console.log(o);
+    init_map() {
+      this.myMap = amapManager.getMap();
       // console.log(this.markerRefs);
-      let deviceClusters = new AMap.MarkerClusterer(o, this.markerRefs, {
+      let deviceClusters = new AMap.MarkerClusterer(this.myMap, this.markerRefs, {
         gridSize: 80,
         maxZoom: 16,
       });
       this.deviceClusters = deviceClusters;
-      let userCluster = new AMap.MarkerClusterer(o, [], {
+      let userCluster = new AMap.MarkerClusterer(this.myMap, [], {
         gridSize: 80,
         maxZoom: 16,
         renderClusterMarker: this.cece
@@ -389,13 +331,12 @@ export default {
             item.key == "LOCAL_LONGTITUDE" ? this.beiyong.lng = item.value : '';
           });
           // console.log(this.beiyong);
-          let map = amapManager.getMap();
-          if(map == null) {
+          if(this.myMap == null) {
             setTimeout(() => {
-              amapManager.getMap().setCenter(new AMap.LngLat(this.beiyong.lng, this.beiyong.lat));
+              this.myMap.setCenter(new AMap.LngLat(this.beiyong.lng, this.beiyong.lat));
             }, 500);
           } else {
-            amapManager.getMap().setCenter(new AMap.LngLat(this.beiyong.lng, this.beiyong.lat));
+            this.myMap.setCenter(new AMap.LngLat(this.beiyong.lng, this.beiyong.lat));
           }
           localStorage.setItem("GISInitPosition", JSON.stringify(this.beiyong));
           // console.log('换地址了');
@@ -409,26 +350,27 @@ export default {
       localStorage.setItem('isSatellite', this.isSatellite);
       // console.log(this.isSatellite);
       // console.log(this.layers);
-      let map = amapManager.getMap();
       // console.log(map.getLayers());
       if(this.isSatellite) {
-        map.add(this.layers);
+        this.myMap.add(this.layers);
         this.isRoadNet = true;
-      } else map.remove(this.layers)
+      } else this.myMap.remove(this.layers)
       // this.isSatellite ? map.add(this.layers) : map.remove(this.layers);
     },
     RoadNet() { //  路网显示和隐藏
       this.isRoadNet = !this.isRoadNet;
-      let map = amapManager.getMap();
-      this.isRoadNet ? map.add(this.layers[1]) : map.remove(this.layers[1]);
+      this.isRoadNet ? this.myMap.add(this.layers[1]) : this.myMap.remove(this.layers[1]);
     },
     infoWindowOpen(e) { //  鼠标悬停，打开信息窗
       // console.log(e);
       if (e.lnglat === undefined) return; //  加载时，不显示
-      var infoWindow = new AMap.InfoWindow({ offset: new AMap.Pixel(5, -30), closeWhenClickMap: true });
-      // console.log('鼠标移入');
+      var infoWindow = this.infoWindows;
+      if(infoWindow.CLASS_NAME == undefined) {
+        infoWindow = new AMap.InfoWindow({ offset: new AMap.Pixel(5, -30), closeWhenClickMap: true });
+        // console.log('鼠标移入');
+      }
       infoWindow.setContent(e.target.content);
-      infoWindow.open(amapManager.getMap(), e.target.getPosition());
+      infoWindow.open(this.myMap, e.target.getPosition());
       this.infoWindows = infoWindow;
       // console.log(infoWindow);
 
@@ -442,7 +384,6 @@ export default {
     Utf8ArrayToStr(array) { //  Utf8Array 转字符串
         var out, i, len, c;
         var char2, char3;
-    
         out = "";
         len = array.length;
         i = 0;
