@@ -1,5 +1,6 @@
 <template>
-    <div class="my-amap-page" :field="field" :card="card" :key="key" :lens="lens" :size="size">
+    <div class="my-amap-page" :field="field">
+      <!-- v-if="is3D" -->
       <el-amap
         v-if="center.length"
         vid="amapDemo"
@@ -8,33 +9,42 @@
         :amap-manager="amapManager"
         class="amap-demo"
         :events="events"
+        :viewMode="viewMode"
       >
       </el-amap>
-      <div class="satellite">
-        <a class="layer_item" @click="Satellite()"  v-bind:class="{'item_active': isSatellite}">
-          <i>
-            <svg t="1600237558301" class="icon"  v-bind:class="{'item_active': isSatellite}" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="3036" width="16" height="16">
-              <path d="M434.265 769.871L270.338 605.944l308.546-308.546 163.927 163.927-308.546 308.546zM298.623 605.944l135.642 135.642 280.261-280.261-135.642-135.641-280.261 280.26zM752.081 452.055L588.154 288.128l43.024-43.024L795.105 409.03l-43.024 43.025zM616.439 288.128L752.081 423.77l14.739-14.739-135.641-135.642-14.74 14.739z" fill="#5A5B5B" p-id="3037"></path>
-              <path d="M646.101 471.162l14.143 14.143-196.58 196.58-14.142-14.144zM770.246 644.932l14.142 14.143L639.772 803.69l-14.143-14.142zM845.907 722.928l14.143 14.142L715.432 881.69l-14.143-14.143zM713.77 458.725L581.484 326.439l36.416-36.416 132.285 132.285-36.415 36.417z m-104-132.286l104 104 8.131-8.131-104-104-8.131 8.131zM396.172 776.322L263.887 644.037l36.415-36.415 132.285 132.285-36.415 36.415z m-104-132.285l104 104 8.13-8.13-104-104-8.13 8.13z" fill="#5A5B5B" p-id="3038"></path>
-              <path d="M363.552 786.962L253.247 676.657l36.415-36.415 110.305 110.305-36.415 36.415z m-82.02-110.305l82.02 82.02 8.13-8.13-82.02-82.02-8.13 8.13zM732.14 293.917l14.142 14.143-29.053 29.053-14.143-14.142z" fill="#5A5B5B" p-id="3039"></path>
-              <path d="M308.403 717.66l14.142 14.143-29.052 29.052-14.143-14.142zM234.158 791.906l14.143 14.143-13.558 13.557-14.142-14.143zM749.689 313.983c-6.268 0-12.16-2.44-16.592-6.873-4.432-4.431-6.872-10.323-6.872-16.591s2.44-12.16 6.873-16.592c4.432-4.431 10.323-6.87 16.591-6.87s12.159 2.439 16.591 6.87c4.432 4.432 6.872 10.324 6.872 16.592s-2.44 12.16-6.872 16.591c-4.43 4.433-10.323 6.873-16.591 6.873z m0-36.925a13.375 13.375 0 0 0-9.521 3.942c-2.543 2.542-3.943 5.923-3.943 9.52s1.4 6.978 3.943 9.52c2.543 2.544 5.924 3.944 9.521 3.944s6.978-1.4 9.52-3.943c2.543-2.543 3.943-5.924 3.943-9.521s-1.4-6.978-3.942-9.521a13.378 13.378 0 0 0-9.521-3.941z" fill="#5A5B5B" p-id="3040"></path>
-              <path d="M288.584 853.415l-101.79-101.79 3.723-3.879c0.224-0.239 0.448-0.479 0.681-0.712 13.625-13.625 31.733-21.126 50.994-21.126s37.369 7.501 50.988 21.121c13.62 13.619 21.121 31.728 21.121 50.988s-7.501 37.369-21.121 50.988c-0.238 0.238-0.478 0.463-0.717 0.687l-3.879 3.723z m-87.669-101.81l87.689 87.688c10.146-11.378 15.696-25.9 15.696-41.276 0-16.59-6.461-32.187-18.191-43.918-11.731-11.73-27.328-18.191-43.918-18.191-15.374 0-29.893 5.548-41.276 15.697zM595.003 594.99l46.928 46.929-14.143 14.143-46.928-46.928zM390.995 396.154l46.928 46.928-14.143 14.143-46.928-46.928z" fill="#5A5B5B" p-id="3041"></path>
-              <path d="M780.724 958.798L545.815 723.891l158.762-158.762 234.908 234.908-158.761 158.761zM574.101 723.891l206.623 206.623L911.2 800.037 704.577 593.414 574.101 723.891z" fill="#5A5B5B" p-id="3042"></path>
-              <path d="M666.456 617.385L887.22 838.148l-14.143 14.143-220.763-220.764zM621.263 672.908l220.764 220.764-14.143 14.142L607.12 687.051zM303.128 186.284l14.143 14.142-144.618 144.618-14.142-14.143zM383.954 259.112l14.143 14.143L253.48 417.873l-14.143-14.143z" fill="#5A5B5B" p-id="3043"></path>
-              <path d="M313.606 500.143L78.698 265.235l158.762-158.76 234.908 234.907-158.762 158.761zM106.983 265.235l206.623 206.623 130.477-130.477L237.46 134.759 106.983 265.235z" fill="#5A5B5B" p-id="3044"></path>
-              <path d="M199.34 158.736L420.102 379.5l-14.143 14.142L185.196 172.88zM154.145 214.26l220.763 220.763-14.142 14.142-220.764-220.763z" fill="#5A5B5B" p-id="3045"></path>
+      <div class="component">
+        <div v-show="isSatellite" class="satellite">
+          <div class="layer_item" @click="RoadNet()">
+            <svg t="1600239865869" class="icon"  v-bind:class="{'item_active': isRoadNet}"  viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="3889" width="16" height="16">
+              <path d="M510.741333 63.096037c-247.523443 0-448.185602 200.658066-448.185602 448.186625 0 247.526513 200.657043 448.184579 448.185602 448.184579s448.186625-200.658066 448.186625-448.184579C958.927959 263.754103 758.269893 63.096037 510.741333 63.096037L510.741333 63.096037zM752.498446 396.689764 449.351148 699.837062c-5.982248 5.977132-16.356526 5.296633-23.175839-1.52268l-20.316721-20.316721c-0.005117-0.005117-0.010233-0.005117-0.010233-0.010233L270.029016 542.16809c-6.819313-6.819313-6.819313-17.874089 0-24.693402l37.040614-37.040614c6.819313-6.824429 17.873066-6.824429 24.693402 0L438.521498 587.193563l252.237815-252.237815c5.983271-5.982248 16.356526-5.301749 23.175839 1.517563l37.040614 37.040614C757.795079 380.338355 758.475578 390.71161 752.498446 396.689764L752.498446 396.689764zM752.498446 396.689764" p-id="3890" fill="#5f6477"></path>
             </svg>
-          </i>
-          卫星
-        </a>
-      </div>
-      <div v-show="isSatellite" class="satellite wrapper">
-        <div class="layer_item" @click="RoadNet()">
-          <svg t="1600239865869" class="icon"  v-bind:class="{'item_active': isRoadNet}"  viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="3889" width="16" height="16">
-            <path d="M510.741333 63.096037c-247.523443 0-448.185602 200.658066-448.185602 448.186625 0 247.526513 200.657043 448.184579 448.185602 448.184579s448.186625-200.658066 448.186625-448.184579C958.927959 263.754103 758.269893 63.096037 510.741333 63.096037L510.741333 63.096037zM752.498446 396.689764 449.351148 699.837062c-5.982248 5.977132-16.356526 5.296633-23.175839-1.52268l-20.316721-20.316721c-0.005117-0.005117-0.010233-0.005117-0.010233-0.010233L270.029016 542.16809c-6.819313-6.819313-6.819313-17.874089 0-24.693402l37.040614-37.040614c6.819313-6.824429 17.873066-6.824429 24.693402 0L438.521498 587.193563l252.237815-252.237815c5.983271-5.982248 16.356526-5.301749 23.175839 1.517563l37.040614 37.040614C757.795079 380.338355 758.475578 390.71161 752.498446 396.689764L752.498446 396.689764zM752.498446 396.689764" p-id="3890" fill="#5f6477"></path>
-          </svg>
-          路网
+            路网
+          </div>
         </div>
+        <div class="satellite">
+          <a class="layer_item" @click="Satellite()"  v-bind:class="{'item_active': isSatellite}">
+            <i>
+              <svg t="1600237558301" class="icon"  v-bind:class="{'item_active': isSatellite}" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="3036" width="16" height="16">
+                <path d="M434.265 769.871L270.338 605.944l308.546-308.546 163.927 163.927-308.546 308.546zM298.623 605.944l135.642 135.642 280.261-280.261-135.642-135.641-280.261 280.26zM752.081 452.055L588.154 288.128l43.024-43.024L795.105 409.03l-43.024 43.025zM616.439 288.128L752.081 423.77l14.739-14.739-135.641-135.642-14.74 14.739z" fill="#5A5B5B" p-id="3037"></path>
+                <path d="M646.101 471.162l14.143 14.143-196.58 196.58-14.142-14.144zM770.246 644.932l14.142 14.143L639.772 803.69l-14.143-14.142zM845.907 722.928l14.143 14.142L715.432 881.69l-14.143-14.143zM713.77 458.725L581.484 326.439l36.416-36.416 132.285 132.285-36.415 36.417z m-104-132.286l104 104 8.131-8.131-104-104-8.131 8.131zM396.172 776.322L263.887 644.037l36.415-36.415 132.285 132.285-36.415 36.415z m-104-132.285l104 104 8.13-8.13-104-104-8.13 8.13z" fill="#5A5B5B" p-id="3038"></path>
+                <path d="M363.552 786.962L253.247 676.657l36.415-36.415 110.305 110.305-36.415 36.415z m-82.02-110.305l82.02 82.02 8.13-8.13-82.02-82.02-8.13 8.13zM732.14 293.917l14.142 14.143-29.053 29.053-14.143-14.142z" fill="#5A5B5B" p-id="3039"></path>
+                <path d="M308.403 717.66l14.142 14.143-29.052 29.052-14.143-14.142zM234.158 791.906l14.143 14.143-13.558 13.557-14.142-14.143zM749.689 313.983c-6.268 0-12.16-2.44-16.592-6.873-4.432-4.431-6.872-10.323-6.872-16.591s2.44-12.16 6.873-16.592c4.432-4.431 10.323-6.87 16.591-6.87s12.159 2.439 16.591 6.87c4.432 4.432 6.872 10.324 6.872 16.592s-2.44 12.16-6.872 16.591c-4.43 4.433-10.323 6.873-16.591 6.873z m0-36.925a13.375 13.375 0 0 0-9.521 3.942c-2.543 2.542-3.943 5.923-3.943 9.52s1.4 6.978 3.943 9.52c2.543 2.544 5.924 3.944 9.521 3.944s6.978-1.4 9.52-3.943c2.543-2.543 3.943-5.924 3.943-9.521s-1.4-6.978-3.942-9.521a13.378 13.378 0 0 0-9.521-3.941z" fill="#5A5B5B" p-id="3040"></path>
+                <path d="M288.584 853.415l-101.79-101.79 3.723-3.879c0.224-0.239 0.448-0.479 0.681-0.712 13.625-13.625 31.733-21.126 50.994-21.126s37.369 7.501 50.988 21.121c13.62 13.619 21.121 31.728 21.121 50.988s-7.501 37.369-21.121 50.988c-0.238 0.238-0.478 0.463-0.717 0.687l-3.879 3.723z m-87.669-101.81l87.689 87.688c10.146-11.378 15.696-25.9 15.696-41.276 0-16.59-6.461-32.187-18.191-43.918-11.731-11.73-27.328-18.191-43.918-18.191-15.374 0-29.893 5.548-41.276 15.697zM595.003 594.99l46.928 46.929-14.143 14.143-46.928-46.928zM390.995 396.154l46.928 46.928-14.143 14.143-46.928-46.928z" fill="#5A5B5B" p-id="3041"></path>
+                <path d="M780.724 958.798L545.815 723.891l158.762-158.762 234.908 234.908-158.761 158.761zM574.101 723.891l206.623 206.623L911.2 800.037 704.577 593.414 574.101 723.891z" fill="#5A5B5B" p-id="3042"></path>
+                <path d="M666.456 617.385L887.22 838.148l-14.143 14.143-220.763-220.764zM621.263 672.908l220.764 220.764-14.143 14.142L607.12 687.051zM303.128 186.284l14.143 14.142-144.618 144.618-14.142-14.143zM383.954 259.112l14.143 14.143L253.48 417.873l-14.143-14.143z" fill="#5A5B5B" p-id="3043"></path>
+                <path d="M313.606 500.143L78.698 265.235l158.762-158.76 234.908 234.907-158.762 158.761zM106.983 265.235l206.623 206.623 130.477-130.477L237.46 134.759 106.983 265.235z" fill="#5A5B5B" p-id="3044"></path>
+                <path d="M199.34 158.736L420.102 379.5l-14.143 14.142L185.196 172.88zM154.145 214.26l220.763 220.763-14.142 14.142-220.764-220.763z" fill="#5A5B5B" p-id="3045"></path>
+              </svg>
+            </i>
+            卫星
+          </a>
+        </div>
+        <div class="satellite" @click="to3D()" style="display: none;">
+          <div class="layer_item" style="line-height: 18px;">
+            {{viewMode}}
+          </div>
+        </div>
+
       </div>
     </div>
 </template>
@@ -52,6 +62,8 @@ export default {
       beiyong: {lat: "32.059358",lng: "118.796628"},
       // markers: [],
       markerRefs: [],
+      // viewMode: '3D',
+      // is3D: true,
       amapManager,
       zoom: 12,
       center: [],
@@ -70,20 +82,18 @@ export default {
           // 构造官方卫星、路网图层
           var layer1 = new AMap.TileLayer.Satellite({ opacity: 0.8 });  //  卫星
           var layer2 =  new AMap.TileLayer.RoadNet({ opacity: 0.5 });   //   路网
-          var layers = [
-              layer1,
-              layer2
-          ]
+          var layers = [ layer1, layer2 ]
           // 添加到地图上
-          if(self.isSatellite) {
-            o.add(layers);
-          }
+          if(self.isSatellite) o.add(layers); 
           self.layers = layers;
-          setTimeout(() => {
-            self.init_mqtt();
-            self.init_map();
-          }, 1000);
         },
+        complete(o) {
+          self.init_position();
+          // console.log('地图加载完成');
+          // console.log(o);
+          self.init_map();
+          self.init_mqtt();
+        }
       },
     };
   },
@@ -93,7 +103,6 @@ export default {
     this.isSatellite = JSON.parse(localStorage.getItem('isSatellite'));
   },
   mounted() {
-    this.init_position();
     setInterval(() => { //  一分钟检测一次
       this.regularCheck();
     }, 60000);
@@ -112,11 +121,20 @@ export default {
     let lng = this.values.lng, lat = this.values.lat;
     this.center = [lng, lat];
     this.position = [lng, lat];
-    let that = this;
-
   },
 
   methods: {
+    to3D(){
+      this.viewMode == '2D' ? this.viewMode = '3D' : this.viewMode = '2D';
+      console.log(this.viewMode);
+      // this.$forceUpdate()
+      this.is3D = false;
+      // console.log(this.is3D);
+      this.$nextTick(() => {
+        this.is3D = true;
+          // this.viewMode == '2D' ? this.viewMode = '2D' : this.viewMode = '3D';
+      })
+    },
     init_mqtt(){
       this.client = mqtt.connect('wss://iot.ljfl.ltd:443/mqtt', {
           username: "test",
@@ -218,7 +236,6 @@ export default {
       this.userMessage.forEach((element, index) => { //  删除数组 和缓存 里的点信息
         if(id === element.id) {
           // console.log('删除的数据');
-          // console.log(element);
           this.userMessage.splice(index, 1)
           // console.log(this.userMessage);
           localStorage.setItem("requestMarker", JSON.stringify(this.userMessage));
@@ -232,14 +249,6 @@ export default {
       if (e.lnglat === undefined) return; //  加载点，不显示
       infoWindow.setContent(e.target.content);
       infoWindow.open(this.myMap, e.target.getPosition());
-    },
-    daxiao() {
-      this.myMap.on("zoomchange", () => {
-        var zoom = this.myMap.getZoom(); //获取当前地图级别
-        this.zoom = zoom;
-        // console.log(this.deviceClusters.getMarkers());
-        // console.log(this.zoom);
-      });
     },
     dellocalStorage() {
       localStorage.removeItem("requestMarker");
@@ -257,10 +266,9 @@ export default {
       let userCluster = new AMap.MarkerClusterer(this.myMap, [], {
         gridSize: 80,
         maxZoom: 16,
-        renderClusterMarker: this.cece
+        renderClusterMarker: this.userStyles
       });
       this.userClusters = userCluster;
-      this.daxiao();
       // console.log(this.beiyong);
       this.init_courses();
       // console.log(this.userMessage);
@@ -276,16 +284,12 @@ export default {
       .then(response => {
         // console.log(response);
         let itemarr = (response.data.resources).map((item) => {
-          let itemobj = {};
+          let itemObject = {};
           for (const element  of item.fields) {
-            itemobj[element.sortableUriKey] = element.value;
+            itemObject[element.sortableUriKey] = element.value;
           }
-          // console.log(itemobj);
-          // itemarr.push(itemobj);
-          return itemobj;
+          return itemObject;
         });
-        // console.log("转换值：");
-        // console.log(itemarr);
         itemarr.map((item) => {
           this.addDevices(item);
         });
@@ -319,8 +323,6 @@ export default {
     },
     async init_position() {   
       const gisPosition = localStorage.getItem("GISInitPosition");
-      // console.log('缓存 ', localStorage.getItem("GISInitPosition").length);
-      // console.log(gisPosition);
       if(gisPosition == null) {
         // console.log('没有缓存');
         await axios.get('/nova-vendor/laravel-nova-configuration/getAllConfigurations')
@@ -340,7 +342,6 @@ export default {
           }
           localStorage.setItem("GISInitPosition", JSON.stringify(this.beiyong));
           // console.log('换地址了');
-          
         });     
 
       }
@@ -348,9 +349,6 @@ export default {
     Satellite() { //  卫星显示和隐藏
       this.isSatellite = !this.isSatellite;
       localStorage.setItem('isSatellite', this.isSatellite);
-      // console.log(this.isSatellite);
-      // console.log(this.layers);
-      // console.log(map.getLayers());
       if(this.isSatellite) {
         this.myMap.add(this.layers);
         this.isRoadNet = true;
@@ -362,7 +360,6 @@ export default {
       this.isRoadNet ? this.myMap.add(this.layers[1]) : this.myMap.remove(this.layers[1]);
     },
     infoWindowOpen(e) { //  鼠标悬停，打开信息窗
-      // console.log(e);
       if (e.lnglat === undefined) return; //  加载时，不显示
       var infoWindow = this.infoWindows;
       if(infoWindow.CLASS_NAME == undefined) {
@@ -376,7 +373,6 @@ export default {
 
     },
     infoWindowClose(e) { //  鼠标移除，关闭信息窗
-      // console.log(e);
       if (e.lnglat === undefined) return; //  加载时，不显示
       // console.log('鼠标移出');
       this.infoWindows.close();
@@ -413,7 +409,7 @@ export default {
     
         return out;
     },
-    cece(context) { //  用户聚合样式
+    userStyles(context) { //  用户聚合样式
       var count = this.userClusters.kb.length;
       var factor = Math.pow(context.count / count, 1 / 18);
       var div = document.createElement('div');
@@ -440,7 +436,3 @@ export default {
     
 };
 </script>
-
-<style>
-/* Scoped Styles */
-</style>
