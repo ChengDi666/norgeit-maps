@@ -32,16 +32,10 @@
           </a>
         </div>
         <div class="satellite">
-          <div class="layer_item"  v-bind:class="{'item_active': statusRecord.showMask}" @click="changeShade($event)" style="line-height: 18px;">
-            遮罩层
-          </div>
-        </div>
-        <div class="satellite">
           <div class="layer_item" @click="showSelect($event, 'xianshi')"  v-bind:class="{'item_active': (statusRecord.types == 'xianshi' && statusRecord.isshowSelect)}" style="line-height: 18px;">
             显示
           </div>
         </div>
-
       </div>
       <div class="settings"  v-show="(statusRecord.isshowSelect)" style="background: #fff;padding: 10px;box-shadow: 0 0 5px #aaa;border-radius: 3px;font-size: 14px;line-height: 2rem;">
         <div v-if="statusRecord.types == 'xianshi'">
@@ -60,7 +54,6 @@
             <label style="padding: 0 5px;width: 6rem;cursor: pointer;"> <input type="checkbox" value="roadNet" @click="showChecked($event)" :checked='statusRecord.roadNet' /> 路网 </label>
           </div>
         </div>
-
       </div>
     </div>
 </template>
@@ -75,17 +68,12 @@ export default {
     return {
       userMessage: [],
       beiyong: {lat: "32.059358",lng: "118.796628"},
-      // markers: [],
-      markerRefs: [],
       amapManager,
       zoom: 12,
       center: [],
       position: [],
-      clusters: {},
       values: {},
       layers: [],
-      isSatellite: true,    //  显示卫星
-      isshowSelect: false,   //  选择类
       trucks: [],   //  所有车辆
       iconList: {
         //  车辆图标
@@ -101,7 +89,14 @@ export default {
         // 小区
         community: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAA+0lEQVRYR+2WwQ2CMBSG/4cLmM5AJ9C7OITcPdop3MHIEDKEDqADmF4cwNQRMD2QVEPgkbaBQ3shgZfXj+/9SUuYeNHE+2OeAKLSdwCrATu1UbL0NdhpQFS64TQ2SnobnDdABlq/Vf5wbSxPusgWuNp30Q1MDjCUg9aAT2iDZMAntL0A3BFEAwBQGiVrdxSi0jsAFzeEDgCr3u0XdARcY9EAuKEdA8BSGi0DXKUpA9FGwA1VAkgGghkQ5+exoWxDQDEUQPu9AW72OaaeiF7mkO/b/j9nAfdPOHB9Ne5N6h/AnnL2tIu2rLWPkttOA9F27Wnsfa32hU4AycAXi2DUIUyrJxgAAAAASUVORK5CYII=',
       },
-      statusRecord: {isshowSelect: false},
+      statusRecord: {
+        isshowSelect: true, // 显示选择界面
+        types: "xianshi", // 展开菜单的类
+        spots: true,  // 显示清运点
+        transfers: true,  // 显示转运站
+        community: true,  // 显示小区
+        devices: true,  // 显示设备
+      },
       client: {},
       infoWindows: {},
       myMap: {},
@@ -111,16 +106,15 @@ export default {
           var layer1 = new AMap.TileLayer.Satellite({ opacity: 0.8 });  //  卫星
           var layer2 =  new AMap.TileLayer.RoadNet({ opacity: 0.5 });   //   路网
           var layers = [ layer1, layer2 ]
-          // 添加到地图上
+          // 添加卫星地图
           if(self.statusRecord.satellite) o.add(layers[0]);
-          //  路网添加到地图上
+          //  添加路网
           if(self.statusRecord.roadNet) o.add(layers[1]);
           self.layers = layers;
         },
         complete(o) {
           self.init_position();
           // console.log('地图加载完成');
-          // console.log(o);
           self.init_map();
           self.init_mqtt();
           // self.init_lodingState(self.statusRecord);
@@ -131,9 +125,8 @@ export default {
   created() {
     this.userMessage = JSON.parse(localStorage.getItem("requestMarker")) ? JSON.parse(localStorage.getItem("requestMarker")) : [];
     this.values = JSON.parse(localStorage.getItem("GISInitPosition")) ? JSON.parse(localStorage.getItem("GISInitPosition")) : {};
-    this.isSatellite = JSON.parse(localStorage.getItem('isSatellite'));
     this.statusRecord = JSON.parse(localStorage.getItem('statusRecord')) ? JSON.parse(localStorage.getItem('statusRecord')) : this.statusRecord;
-    // console.log(this.statusRecord)
+    console.log(this.statusRecord)
   },
   mounted() {
     setInterval(() => { //  一分钟检测一次
@@ -141,12 +134,10 @@ export default {
     }, 60000);
 
     if(this.$route.params.lat == undefined) {   //  刷新
-      if(this.values.lat == undefined) {
-        //  没有缓存
+      if(this.values.lat == undefined) { //  没有缓存
         this.values = this.beiyong;
       }
-    } else {
-      //  点击传值
+    } else { //  点击传值
       this.values = this.$route.params;
       localStorage.setItem("GISInitPosition", JSON.stringify(this.values));
     }
@@ -157,21 +148,18 @@ export default {
   },
 
   methods: {
-    markerMobile(vid, lat, lng, speed=60) {
-      const marker = this.deviceClusters.getMarkers();
-      // console.log(marker);
-      marker.map(item => {
-        if(item.Ce.vid == vid) {
-          item.moveTo(new AMap.LngLat(lng, lat), speed);
-        }
-      });
+    init_map() {  //  初始化地图
+      this.myMap = amapManager.getMap();
+      //绑定地图移动与缩放事件
+      this.myMap.on('moveend', this.mapZoom);
+      this.myMap.setZoom([7,18]);
+      // console.log(this.beiyong);
+      // console.log(this.userMessage);
+      this.mapZoom();
     },
     init_lodingState(state) {  //  初始化加载
-      this.statusRecord.showMask ? '' : this.statusRecord.showMask = false;  //  加载遮罩
-      this.zhezhao();
     },
-    addMarker(icon, vid, lat, lng, url, content, text, id) {
-      // this.delMarker(vid);
+    addMarker(icon, lat, lng, url, content, text, id) {
       let marker = new AMap.Marker({
         vid: text + '_' + id,
         position: [lng, lat],
@@ -192,22 +180,7 @@ export default {
       marker.on("dblclick", () => { //  左双击跳转
         window.location.href = `/resources/${url}`
       });
-
       marker.setMap(this.myMap);
-      //  轨迹
-      // var passedPolyline = new AMap.Polyline({
-      //   map: this.myMap,
-      //   // path: lineArr,
-      //   showDir: true,
-      //   strokeColor: "#AF5",  //线颜色
-      //   // strokeOpacity: 1,     //线透明度
-      //   strokeWeight: 6,      //线宽
-      //   // strokeStyle: "solid"  //线样式
-      // });
-      // marker.on('moving', function (e) {
-      //   passedPolyline.setPath(e.passedPath);
-      // });
-      // this.deviceClusters.addMarker(marker);
     },
     showChecked(e) {
       // console.log(e);
@@ -263,20 +236,7 @@ export default {
             if(mes) {
               const users = JSON.parse(mes)
               // console.log(users);
-              if(users.type == 'truck') {
-                // console.log('车辆更新');
-                this.trucks = this.trucks.map(item => {
-                  if(item.id == users.id) {
-                    // console.log(item);
-                    item.position = users.position;
-                    const vid = 'truck_' + users.id;
-                    const lat = users.position.lat;
-                    const lng = users.position.lng;
-                    this.markerMobile(vid, lat, lng, 300);
-                  }
-                  return item;
-                });
-              } else if(users.lat != 0 && users.lng != 0) {
+              if(users.lat != 0 && users.lng != 0) {
                 users.time = new Date();
                 let isOk = true;
                 const arr = this.userMessage.map((item) => {
@@ -290,11 +250,6 @@ export default {
                 else this.userMessage = arr;
                 // console.log(this.userMessage);
                 localStorage.setItem("requestMarker", JSON.stringify(this.userMessage));
-              } else {
-                // console.log('下线了');
-                // console.log(users);
-                this.delMarker("user_" + users.id);
-                this.delCache(users.id);
               }
             }
           }
@@ -303,15 +258,15 @@ export default {
       // client.end()
     },
     delMarker(id) {
-      const arr = this.deviceClusters.kb;
-      // console.log(arr)
-      if(arr) {
-        arr.forEach(element => {
-          if(id == element.Ce.vid) { //  点存在删除
-            this.deviceClusters.removeMarker(element);
-          }
-        });
-      }
+      // const arr = this.deviceClusters.kb;
+      // // console.log(arr)
+      // if(arr) {
+      //   arr.forEach(element => {
+      //     if(id == element.Ce.vid) { //  点存在删除
+      //       this.deviceClusters.removeMarker(element);
+      //     }
+      //   });
+      // }
     },
     regularCheck() {  //  判断有效期
       const markerArr = JSON.parse(localStorage.getItem("requestMarker"));
@@ -321,7 +276,7 @@ export default {
           if (thisTime - new Date(item.time) > 300000) {
             // console.log(item);
             console.log("user_" + item.id + " 连接超时");
-            this.delMarker("user_" + item.id);
+            // this.delMarker("user_" + item.id); // 删除点
             this.delCache(item.id);
           }
         });
@@ -337,64 +292,13 @@ export default {
         }
       });
     },
-    markerClick(e) {
-      // console.log(e);
-      var infoWindow = new AMap.InfoWindow({ offset: new AMap.Pixel(0, -30) });
-      // console.log(infoWindow.getIsOpen());
-      if (e.lnglat === undefined) return; //  加载点，不显示
-      infoWindow.setContent(e.target.content);
-      infoWindow.open(this.myMap, e.target.getPosition());
-    },
-    dellocalStorage() {
-      localStorage.removeItem("requestMarker");
-      this.userMessage = [];
-    },
-
-
-    zhezhao(){
-      new AMap.DistrictSearch({
-          extensions:'all',
-          subdistrict:0
-      }).search('烟台市',(status,result) => {
-          // 外多边形坐标数组和内多边形坐标数组
-          var outer = [
-              new AMap.LngLat(-360,90,true),
-              new AMap.LngLat(-360,-90,true),
-              new AMap.LngLat(360,-90,true),
-              new AMap.LngLat(360,90,true),
-          ];
-          var holes = result.districtList[0].boundaries
-
-          var pathArray = [
-              outer
-          ];
-          pathArray.push.apply(pathArray,holes)
-          var polygon = new AMap.Polygon( {
-              pathL:pathArray,
-              strokeColor: '#00eeff',
-              strokeWeight: 1,
-              fillColor: '#71B3ff',
-              fillOpacity: 0.7,
-              extData: {
-                isShow: true
-              }
-          });
-          this.yanmo = polygon;
-          polygon.setPath(pathArray);
-          // console.log(this.yanmo.getOptions());
-
-          this.statusRecord.showMask ? this.yanmo.show() : this.yanmo.hide();
-          // console.log('加载遮罩');
-          this.myMap.add(polygon)
-      })
-    },
     mapZoom() { // 地图缩放
       const zoom = this.myMap.getZoom();
       console.log('缩放： ', zoom);
       const bounds = this.myMap.getBounds();
       // console.log('东北(右上)角： ', bounds.northeast)
       // console.log('西南(左下)角： ', bounds.southwest)
-      this.getData(`https://yantai.ljfl.ltd/api/addresses/search?northeast={"lat": ${bounds.northeast.lat}, "lng": ${bounds.northeast.lng}}&southwest={"lat": ${bounds.southwest.lat}, "lng": ${bounds.southwest.lng}}&level=${zoom}`)
+      this.getData(`/api/addresses/search?northeast={"lat": ${bounds.northeast.lat}, "lng": ${bounds.northeast.lng}}&southwest={"lat": ${bounds.southwest.lat}, "lng": ${bounds.southwest.lng}}&level=${zoom}`)
         .then(res => {
           // console.log(res)
           this.currentData = res.data;
@@ -412,11 +316,10 @@ export default {
     async manageData(data, text) { // 信息分类 添加点
       for (let i = 0; i < data.length; i++) {
         const item = data[i];
-        const vid = text + '_' + item.id;
         const url = `${text}/${item.id}`;
         let content, icon;
         if(text == 'addresses') {
-          content = `<p>地址：${item.name}</p>`
+          content = `<p>小区：${item.name}</p>`
           icon = this.iconList.community
         }
         else if(text == 'devices') {
@@ -431,10 +334,10 @@ export default {
           content = `<p>转运站：${item.name}</p>`
           icon = this.iconList['transfers']
         };
-        this.addMarker(icon, vid, item.position.lat, item.position.lng, url, content, text, item.id);
+        this.addMarker(icon, item.position.lat, item.position.lng, url, content, text, item.id);
       }
     },
-    infoWindowTable(data) {
+    infoWindowTable(data) { // 返回 统计显示 html
       let content = '<div class="myInfoWindowTable">'
       for (let i = 0; i < data.details.length; i ++) {
         const item = data.details[i];
@@ -447,8 +350,7 @@ export default {
       this.myMap.clearMap(); // 清除原覆盖物
       for (let i = 0; i < data.length; i++) {
         const item = data[i];
-        let sum = 0;
-        let content = `<p>名称：${item.name}</p>`;
+        let sum = 0, content = `<p>名称：${item.name}</p>`;
         if(this.statusRecord.devices) { // 显示设备
           content += `<p>设备：${item.deviceCount}</p>`
           sum += item.deviceCount
@@ -465,18 +367,19 @@ export default {
           content += `<p>小区：${item.communityCount}</p>`
           sum += item.communityCount
         }
-        content += `<p>总数：${sum}</p>`
+        content += `<p>总数：${sum}</p>`;
         let marker = new AMap.Marker({
           position: new AMap.LngLat(item.position.lng,item.position.lat),
           content: `<div class="myLabel"><p>${sum}</p></div>`,
           offset: new AMap.Pixel(-13, -30),
+          bubble: true,
           extData: {
             id: item.id,
             text: 'addresses'
           }
         });
         marker.setMap(this.myMap);
-        marker.myContent = content
+        marker.myContent = content;
         marker.on("mouseover", this.infoWindowOpen);
         marker.emit("mouseover", { target: marker});
         marker.on("mouseout", this.infoWindowClose);
@@ -484,35 +387,15 @@ export default {
       }
     },
     getStatistics(id, text) { // 获取 统计
-       return this.getData(`https://yantai.ljfl.ltd/api/${text}/${id}/statistics`)
+       return this.getData(`/api/${text}/${id}/statistics`)
       .then(res => {
         // console.log(res);
-        if(!res.data) {
-          return null
-        }
+        if(!res.data) return null
         return res.data
       })
     },
-    init_map() {  //  初始化地图
-      this.myMap = amapManager.getMap();
-      let deviceClusters = new AMap.MarkerClusterer(this.myMap, this.markerRefs, {
-        gridSize: 80,
-        maxZoom: 16,
-      });
-      this.deviceClusters = deviceClusters;
-      //绑定地图移动与缩放事件
-      this.myMap.on('moveend', this.mapZoom);
-      this.myMap.setZoom([7,18]);
-      // console.log(this.beiyong);
-      // console.log(this.userMessage);
-      this.mapZoom();
-    },
-    getData(url) {
-      return axios.get(url).then(response => {
-        return response
-      }).catch(err => {
-        return err
-      });
+    getData(url) { // get 请求数据
+      return axios.get(url).then(response => { return response }).catch(err => { return err });
     },
     async init_position() {
       const gisPosition = localStorage.getItem("GISInitPosition");
@@ -550,22 +433,6 @@ export default {
       this.statusRecord.types = type;
       localStorage.setItem('statusRecord', JSON.stringify(this.statusRecord));
     },
-    changeShade(e) {  //  改变阴影-遮罩
-      // console.log('改变阴影-遮罩');
-      // console.log(e);
-      const isShow = this.statusRecord.showMask;
-      // console.log(isShow);
-      if(isShow) {
-        this.yanmo.hide();
-        e.target.classList.remove("item_active");
-      } else {
-        this.yanmo.show();
-        e.target.classList.add("item_active");
-      }
-      this.statusRecord.showMask = !isShow;
-      localStorage.setItem('statusRecord', JSON.stringify(this.statusRecord));
-      // this.yanmo.setExtData({ isShow: !isShow });
-    },
     async infoWindowOpen(e) { //  鼠标悬停，打开信息窗
       // console.log(e);
       if (e.lnglat === undefined) return; //  加载时，不显示
@@ -583,7 +450,6 @@ export default {
       // console.log('id： ', data)
       if(data.id) {
         let tongji = await this.getStatistics(data.id, data.text)
-        // console.log(tongji);
         if(!tongji) {
           content += '<h3>部分信息获取错误，请稍后重试</h3>'
         } else if(data.text == 'addresses') {
@@ -600,6 +466,7 @@ export default {
     infoWindowClose(e) { //  鼠标移除，关闭信息窗
       if (e.lnglat === undefined) return; //  加载时，不显示
       // console.log('鼠标移出');
+      if (this.infoWindows.CLASS_NAME === undefined) return; //  空，不显示
       this.infoWindows.close();
     },
     Utf8ArrayToStr(array) { //  Utf8Array 转字符串
@@ -609,29 +476,27 @@ export default {
         len = array.length;
         i = 0;
         while(i < len) {
-        c = array[i++];
-        switch(c >> 4)
-        {
-          case 0: case 1: case 2: case 3: case 4: case 5: case 6: case 7:
-            // 0xxxxxxx
-            out += String.fromCharCode(c);
-            break;
-          case 12: case 13:
-            // 110x xxxx   10xx xxxx
-            char2 = array[i++];
-            out += String.fromCharCode(((c & 0x1F) << 6) | (char2 & 0x3F));
-            break;
-          case 14:
-            // 1110 xxxx  10xx xxxx  10xx xxxx
-            char2 = array[i++];
-            char3 = array[i++];
-            out += String.fromCharCode(((c & 0x0F) << 12) |
-                          ((char2 & 0x3F) << 6) |
-                          ((char3 & 0x3F) << 0));
-            break;
+          c = array[i++];
+          switch(c >> 4) {
+            case 0: case 1: case 2: case 3: case 4: case 5: case 6: case 7:
+              // 0xxxxxxx
+              out += String.fromCharCode(c);
+              break;
+            case 12: case 13:
+              // 110x xxxx   10xx xxxx
+              char2 = array[i++];
+              out += String.fromCharCode(((c & 0x1F) << 6) | (char2 & 0x3F));
+              break;
+            case 14:
+              // 1110 xxxx  10xx xxxx  10xx xxxx
+              char2 = array[i++];
+              char3 = array[i++];
+              out += String.fromCharCode(((c & 0x0F) << 12) |
+                            ((char2 & 0x3F) << 6) |
+                            ((char3 & 0x3F) << 0));
+              break;
+          }
         }
-        }
-
         return out;
     },
   },
