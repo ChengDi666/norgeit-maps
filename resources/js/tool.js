@@ -4,8 +4,28 @@ Nova.booting((Vue, router, store) => {
     {
       name: 'maps',
       path: '/maps',
-      component: require('./components/Tool'),
+      component: require('./components/Tool')
     },
+    {
+      name: 'mapsUser',
+      path: '/maps/user',
+      component: require('./components/staticMap')
+    },
+    {
+      name: 'mapsTruck',
+      path: '/maps/truck',
+      component: require('./components/staticMap')
+    },
+    {
+      name: 'mapsSpot',
+      path: '/maps/spot',
+      component: require('./components/staticMap')
+    },
+    {
+      name: 'mapsTransfer',
+      path: '/maps/transfer',
+      component: require('./components/staticMap')
+    }
   ])
 
   Vue.use(VueAMap);

@@ -1,7 +1,7 @@
 <template>
-<!-- <script src="https://webapi.amap.com/loca?key=eeb7e7e703b57e8d106f6f352563bd71&v=1.3.2"></script> -->
-    <div class="my-amap-page" :field="field" id="myBigMap">
-      <el-amap
+  <!-- <script src="https://webapi.amap.com/loca?key=eeb7e7e703b57e8d106f6f352563bd71&v=1.3.2"></script> -->
+  <div class="my-amap-page" :field="field" id="myBigMap">
+    <el-amap
         v-if="center.length"
         vid="amapDemo"
         :center="center"
@@ -10,50 +10,34 @@
         :amap-manager="amapManager"
         class="amap-demo"
         :events="events"
-      >
-      </el-amap>
-      <div class="component">
-        <div class="satellite">
-          <a class="layer_item" @click="showSelect($event,'satellite')"  v-bind:class="{'item_active': (statusRecord.types == 'satellite' && statusRecord.isshowSelect)}">
-            <i>
-              <svg t="1600237558301" class="icon" v-bind:class="{'item_active': (statusRecord.types == 'satellite' && statusRecord.isshowSelect)}" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="3036" width="16" height="16">
-                <path d="M434.265 769.871L270.338 605.944l308.546-308.546 163.927 163.927-308.546 308.546zM298.623 605.944l135.642 135.642 280.261-280.261-135.642-135.641-280.261 280.26zM752.081 452.055L588.154 288.128l43.024-43.024L795.105 409.03l-43.024 43.025zM616.439 288.128L752.081 423.77l14.739-14.739-135.641-135.642-14.74 14.739z" fill="#5A5B5B" p-id="3037"></path>
-                <path d="M646.101 471.162l14.143 14.143-196.58 196.58-14.142-14.144zM770.246 644.932l14.142 14.143L639.772 803.69l-14.143-14.142zM845.907 722.928l14.143 14.142L715.432 881.69l-14.143-14.143zM713.77 458.725L581.484 326.439l36.416-36.416 132.285 132.285-36.415 36.417z m-104-132.286l104 104 8.131-8.131-104-104-8.131 8.131zM396.172 776.322L263.887 644.037l36.415-36.415 132.285 132.285-36.415 36.415z m-104-132.285l104 104 8.13-8.13-104-104-8.13 8.13z" fill="#5A5B5B" p-id="3038"></path>
-                <path d="M363.552 786.962L253.247 676.657l36.415-36.415 110.305 110.305-36.415 36.415z m-82.02-110.305l82.02 82.02 8.13-8.13-82.02-82.02-8.13 8.13zM732.14 293.917l14.142 14.143-29.053 29.053-14.143-14.142z" fill="#5A5B5B" p-id="3039"></path>
-                <path d="M308.403 717.66l14.142 14.143-29.052 29.052-14.143-14.142zM234.158 791.906l14.143 14.143-13.558 13.557-14.142-14.143zM749.689 313.983c-6.268 0-12.16-2.44-16.592-6.873-4.432-4.431-6.872-10.323-6.872-16.591s2.44-12.16 6.873-16.592c4.432-4.431 10.323-6.87 16.591-6.87s12.159 2.439 16.591 6.87c4.432 4.432 6.872 10.324 6.872 16.592s-2.44 12.16-6.872 16.591c-4.43 4.433-10.323 6.873-16.591 6.873z m0-36.925a13.375 13.375 0 0 0-9.521 3.942c-2.543 2.542-3.943 5.923-3.943 9.52s1.4 6.978 3.943 9.52c2.543 2.544 5.924 3.944 9.521 3.944s6.978-1.4 9.52-3.943c2.543-2.543 3.943-5.924 3.943-9.521s-1.4-6.978-3.942-9.521a13.378 13.378 0 0 0-9.521-3.941z" fill="#5A5B5B" p-id="3040"></path>
-                <path d="M288.584 853.415l-101.79-101.79 3.723-3.879c0.224-0.239 0.448-0.479 0.681-0.712 13.625-13.625 31.733-21.126 50.994-21.126s37.369 7.501 50.988 21.121c13.62 13.619 21.121 31.728 21.121 50.988s-7.501 37.369-21.121 50.988c-0.238 0.238-0.478 0.463-0.717 0.687l-3.879 3.723z m-87.669-101.81l87.689 87.688c10.146-11.378 15.696-25.9 15.696-41.276 0-16.59-6.461-32.187-18.191-43.918-11.731-11.73-27.328-18.191-43.918-18.191-15.374 0-29.893 5.548-41.276 15.697zM595.003 594.99l46.928 46.929-14.143 14.143-46.928-46.928zM390.995 396.154l46.928 46.928-14.143 14.143-46.928-46.928z" fill="#5A5B5B" p-id="3041"></path>
-                <path d="M780.724 958.798L545.815 723.891l158.762-158.762 234.908 234.908-158.761 158.761zM574.101 723.891l206.623 206.623L911.2 800.037 704.577 593.414 574.101 723.891z" fill="#5A5B5B" p-id="3042"></path>
-                <path d="M666.456 617.385L887.22 838.148l-14.143 14.143-220.763-220.764zM621.263 672.908l220.764 220.764-14.143 14.142L607.12 687.051zM303.128 186.284l14.143 14.142-144.618 144.618-14.142-14.143zM383.954 259.112l14.143 14.143L253.48 417.873l-14.143-14.143z" fill="#5A5B5B" p-id="3043"></path>
-                <path d="M313.606 500.143L78.698 265.235l158.762-158.76 234.908 234.907-158.762 158.761zM106.983 265.235l206.623 206.623 130.477-130.477L237.46 134.759 106.983 265.235z" fill="#5A5B5B" p-id="3044"></path>
-                <path d="M199.34 158.736L420.102 379.5l-14.143 14.142L185.196 172.88zM154.145 214.26l220.763 220.763-14.142 14.142-220.764-220.763z" fill="#5A5B5B" p-id="3045"></path>
-              </svg>
-            </i>
-            卫星
-          </a>
-        </div>
-        <div class="satellite">
-          <div class="layer_item" @click="showSelect($event, 'xianshi')"  v-bind:class="{'item_active': (statusRecord.types == 'xianshi' && statusRecord.isshowSelect)}" style="line-height: 18px;">
-            显示
-          </div>
-        </div>
-        <div class="satellite">
-          <div class="layer_item" @click="screen"  v-bind:class="{'item_active': fullscreen}" style="line-height: 18px;">
-            全屏
-          </div>
+    >
+    </el-amap>
+    <div class="component">
+      <div class="satellite">
+        <a class="layer_item" @click="showSelect($event,'satellite')"  v-bind:class="{'item_active': (statusRecord.types == 'satellite' && statusRecord.isshowSelect)}">
+          <i>
+            <svg t="1600237558301" class="icon" v-bind:class="{'item_active': (statusRecord.types == 'satellite' && statusRecord.isshowSelect)}" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="3036" width="16" height="16">
+              <path d="M434.265 769.871L270.338 605.944l308.546-308.546 163.927 163.927-308.546 308.546zM298.623 605.944l135.642 135.642 280.261-280.261-135.642-135.641-280.261 280.26zM752.081 452.055L588.154 288.128l43.024-43.024L795.105 409.03l-43.024 43.025zM616.439 288.128L752.081 423.77l14.739-14.739-135.641-135.642-14.74 14.739z" fill="#5A5B5B" p-id="3037"></path>
+              <path d="M646.101 471.162l14.143 14.143-196.58 196.58-14.142-14.144zM770.246 644.932l14.142 14.143L639.772 803.69l-14.143-14.142zM845.907 722.928l14.143 14.142L715.432 881.69l-14.143-14.143zM713.77 458.725L581.484 326.439l36.416-36.416 132.285 132.285-36.415 36.417z m-104-132.286l104 104 8.131-8.131-104-104-8.131 8.131zM396.172 776.322L263.887 644.037l36.415-36.415 132.285 132.285-36.415 36.415z m-104-132.285l104 104 8.13-8.13-104-104-8.13 8.13z" fill="#5A5B5B" p-id="3038"></path>
+              <path d="M363.552 786.962L253.247 676.657l36.415-36.415 110.305 110.305-36.415 36.415z m-82.02-110.305l82.02 82.02 8.13-8.13-82.02-82.02-8.13 8.13zM732.14 293.917l14.142 14.143-29.053 29.053-14.143-14.142z" fill="#5A5B5B" p-id="3039"></path>
+              <path d="M308.403 717.66l14.142 14.143-29.052 29.052-14.143-14.142zM234.158 791.906l14.143 14.143-13.558 13.557-14.142-14.143zM749.689 313.983c-6.268 0-12.16-2.44-16.592-6.873-4.432-4.431-6.872-10.323-6.872-16.591s2.44-12.16 6.873-16.592c4.432-4.431 10.323-6.87 16.591-6.87s12.159 2.439 16.591 6.87c4.432 4.432 6.872 10.324 6.872 16.592s-2.44 12.16-6.872 16.591c-4.43 4.433-10.323 6.873-16.591 6.873z m0-36.925a13.375 13.375 0 0 0-9.521 3.942c-2.543 2.542-3.943 5.923-3.943 9.52s1.4 6.978 3.943 9.52c2.543 2.544 5.924 3.944 9.521 3.944s6.978-1.4 9.52-3.943c2.543-2.543 3.943-5.924 3.943-9.521s-1.4-6.978-3.942-9.521a13.378 13.378 0 0 0-9.521-3.941z" fill="#5A5B5B" p-id="3040"></path>
+              <path d="M288.584 853.415l-101.79-101.79 3.723-3.879c0.224-0.239 0.448-0.479 0.681-0.712 13.625-13.625 31.733-21.126 50.994-21.126s37.369 7.501 50.988 21.121c13.62 13.619 21.121 31.728 21.121 50.988s-7.501 37.369-21.121 50.988c-0.238 0.238-0.478 0.463-0.717 0.687l-3.879 3.723z m-87.669-101.81l87.689 87.688c10.146-11.378 15.696-25.9 15.696-41.276 0-16.59-6.461-32.187-18.191-43.918-11.731-11.73-27.328-18.191-43.918-18.191-15.374 0-29.893 5.548-41.276 15.697zM595.003 594.99l46.928 46.929-14.143 14.143-46.928-46.928zM390.995 396.154l46.928 46.928-14.143 14.143-46.928-46.928z" fill="#5A5B5B" p-id="3041"></path>
+              <path d="M780.724 958.798L545.815 723.891l158.762-158.762 234.908 234.908-158.761 158.761zM574.101 723.891l206.623 206.623L911.2 800.037 704.577 593.414 574.101 723.891z" fill="#5A5B5B" p-id="3042"></path>
+              <path d="M666.456 617.385L887.22 838.148l-14.143 14.143-220.763-220.764zM621.263 672.908l220.764 220.764-14.143 14.142L607.12 687.051zM303.128 186.284l14.143 14.142-144.618 144.618-14.142-14.143zM383.954 259.112l14.143 14.143L253.48 417.873l-14.143-14.143z" fill="#5A5B5B" p-id="3043"></path>
+              <path d="M313.606 500.143L78.698 265.235l158.762-158.76 234.908 234.907-158.762 158.761zM106.983 265.235l206.623 206.623 130.477-130.477L237.46 134.759 106.983 265.235z" fill="#5A5B5B" p-id="3044"></path>
+              <path d="M199.34 158.736L420.102 379.5l-14.143 14.142L185.196 172.88zM154.145 214.26l220.763 220.763-14.142 14.142-220.764-220.763z" fill="#5A5B5B" p-id="3045"></path>
+            </svg>
+          </i>
+          卫星
+        </a>
+      </div>
+      <div class="satellite">
+        <div class="layer_item" @click="screen"  v-bind:class="{'item_active': fullscreen}" style="line-height: 18px;">
+          全屏
         </div>
       </div>
       <div class="settings"  v-show="(statusRecord.isshowSelect)" style="background: #fff;padding: 10px;box-shadow: 0 0 5px #aaa;border-radius: 3px;font-size: 14px;line-height: 2rem;">
-        <div v-if="statusRecord.types == 'xianshi'">
-          <div style="display: flex;flex-flow: row wrap;justify-content: space-between;width: 200px;">
-            <label style="padding: 0 5px;width: 6rem;cursor: pointer;"> <input type="checkbox" value="spots"  @click="showChecked($event)" :checked='statusRecord.spots' /> 清运点 </label>
-            <label style="padding: 0 5px;width: 6rem;cursor: pointer;"> <input type="checkbox" value="transfers"  @click="showChecked($event)" :checked='statusRecord.transfers' /> 转运站 </label>
-            <label style="padding: 0 5px;width: 6rem;cursor: pointer;"> <input type="checkbox" value="community"  @click="showChecked($event)" :checked='statusRecord.community' /> 小区 </label>
-            <label style="padding: 0 5px;width: 6rem;cursor: pointer;"> <input type="checkbox" value="devices"  @click="showChecked($event)" :checked='statusRecord.devices' /> 设备 </label>
-<!--            <label style="padding: 0 5px;"> <input type="checkbox" value="users" @click="showChecked($event)" :checked='statusRecord.users' /> 人员 </label>-->
-<!--            <label style="padding: 0 5px;"> <input type="checkbox" value="trucks"  @click="showChecked($event)" :checked='statusRecord.trucks' /> 车辆 </label>-->
-          </div>
-        </div>
-        <div v-else-if="statusRecord.types == 'satellite'">
+        <div v-if="statusRecord.types == 'satellite'">
           <div style="display: flex;flex-flow: row wrap;justify-content: space-between;width: 200px;">
             <label style="padding: 0 5px;width: 6rem;cursor: pointer;"> <input type="checkbox" value="satellite" @click="showChecked($event)" :checked='statusRecord.satellite' /> 卫星地图 </label>
             <label style="padding: 0 5px;width: 6rem;cursor: pointer;"> <input type="checkbox" value="roadNet" @click="showChecked($event)" :checked='statusRecord.roadNet' /> 路网 </label>
@@ -61,6 +45,7 @@
         </div>
       </div>
     </div>
+  </div>
 </template>
 <script>
 import { AMapManager, lazyAMapApiLoaderInstance } from "vue-amap";
@@ -106,6 +91,7 @@ export default {
       infoWindows: {},
       fullscreen:false,
       myMap: {},
+      showType: '',
       events: {
         init(o) {
           // 构造官方卫星、路网图层
@@ -122,7 +108,6 @@ export default {
           self.init_position();
           // console.log('地图加载完成');
           self.init_map();
-          self.init_mqtt();
           // self.init_lodingState(self.statusRecord);
         }
       },
@@ -135,9 +120,6 @@ export default {
     // console.log(this.statusRecord)
   },
   mounted() {
-    setInterval(() => { //  一分钟检测一次
-      this.regularCheck();
-    }, 60000);
     //监听浏览器状态
     window.onresize = () => {
       if(!this.checkFull()){
@@ -145,14 +127,17 @@ export default {
         this.fullscreen = false;
       }
     }
+    const [type] = (this.$route.path.split('/')).slice(-1);
+    // console.log(type);
+    this.showType = type;
     if(this.$route.params.lat == undefined) {   //  刷新
       if(this.values.lat == undefined) { //  没有缓存
         this.values = this.beiyong;
       }
     } else { //  点击传值
       this.values = this.$route.params;
-      console.log(this.values);
-      console.log(this.field);
+      // console.log(this.values);
+      // console.log(this.values.type);
       localStorage.setItem("GISInitPosition", JSON.stringify(this.values));
     }
     // console.log(this.values);
@@ -162,6 +147,253 @@ export default {
   },
 
   methods: {
+    init_map() {  //  初始化地图
+      this.myMap = amapManager.getMap();
+      //绑定地图移动与缩放事件
+      this.myMap.on('moveend', this.mapZoom);
+      this.myMap.setZoom([7,18]);
+      this.getMessage(this.showType);
+      // console.log(this.beiyong);
+      // console.log(this.userMessage);
+      this.mapZoom();
+    },
+    init_lodingState(state) {  //  初始化加载
+    },
+    addMarker(icon, lat, lng, url, content, text, id) {
+      let marker = new AMap.Marker({
+        vid: text + '_' + id,
+        position: [lng, lat],
+        // title: `鼠标左键双击，查看详情页`,
+        clickable: true,
+        autoRotation: true,
+        icon: icon
+      });
+      marker.myContent = content;
+      marker.on("mouseover", this.infoWindowOpen);
+      marker.emit("mouseover", { target: marker});
+      marker.on("mouseout", this.infoWindowClose);
+      marker.emit("mouseout", { target: marker});
+      marker.on("dblclick", () => { //  左双击跳转
+        window.location.href = `/resources/${url}`
+      });
+      marker.setMap(this.myMap);
+    },
+    showChecked(e) {
+      // console.log(e);
+      // console.log(e.target.checked);
+      // console.log(e.target.value);
+      if(e.target.checked) {
+        if(e.target.value == 'satellite') {    //  开启卫星地图
+          this.myMap.add(this.layers[0]);
+          this.statusRecord.satellite = e.target.checked
+        } else if(e.target.value == 'roadNet') {    //  开启路网
+          this.myMap.add(this.layers[1])
+          this.statusRecord.roadNet = e.target.checked
+        } else {
+          this.statusRecord[e.target.value] = e.target.checked
+        }
+      } else {
+        if(e.target.value == 'satellite') {    //  关闭卫星地图
+          this.myMap.remove(this.layers[0]);
+          this.statusRecord.satellite = e.target.checked
+        } else if(e.target.value == 'roadNet') {    //  关闭路网
+          this.myMap.remove(this.layers[1])
+          this.statusRecord.roadNet = e.target.checked
+        } else {
+          this.statusRecord[e.target.value] = e.target.checked
+        }
+      }
+      localStorage.setItem('statusRecord', JSON.stringify(this.statusRecord));
+    },
+
+    delCache(id) {  //  清除指定缓存和存储数组
+      this.userMessage.forEach((element, index) => { //  删除数组 和缓存 里的点信息
+        if(id === element.id) {
+          // console.log('删除的数据');
+          this.userMessage.splice(index, 1)
+          // console.log(this.userMessage);
+          localStorage.setItem("requestMarker", JSON.stringify(this.userMessage));
+        }
+      });
+    },
+    getMessage(type) {
+      if (type != 'transfer') {
+        type += 's'
+      }
+      this.getData(`/api/${type}`)
+        .then(res => {
+          // console.log(res)
+          if(res.data.data && res.data.data.length) {
+            // console.log('有数据')
+            this.detailMarker(res.data.data);
+          }
+        });
+    },
+    mapZoom() { // 地图缩放
+      const zoom = this.myMap.getZoom();
+      console.log('缩放： ', zoom);
+      const bounds = this.myMap.getBounds();
+      // console.log('东北(右上)角： ', bounds.northeast)
+      // console.log('西南(左下)角： ', bounds.southwest)
+    },
+    detailMarker(data) {
+      // this.myMap.clearMap(); // 清除原覆盖物
+      // console.log('详细信息： ', data);
+      if(this.showType == 'user') this.manageData(data, 'users'); // 显示设备
+      else if(this.showType == 'truck') this.manageData(data, 'trucks'); // 显示设备
+      else if(this.showType == 'spot') this.manageData(data, 'spots'); // 显示清运点
+      else if(this.showType == 'transfer')this.manageData(data, 'transfers'); // 显示转运站
+    },
+    async manageData(data, text) { // 信息分类 添加点
+      for (let i = 0; i < data.length; i++) {
+        const item = data[i];
+        if(!item.position || !item.position.lat) {
+          // console.log('没有地址信息');
+          break
+        }
+        const url = `${text}/${item.id}`;
+        let content, icon;
+        if(text == 'users') {
+          content = `<p>用户：${item.name}</p>`
+          icon = this.iconList['user']
+        }
+        else if(text == 'trucks') {
+          content = `<p>车牌：${item.licenseNO}</p>`
+          icon = this.iconList['truck']
+        }
+        else if(text == 'spots') {
+          content = `<p>清运点：${item.name}</p>`
+          icon = this.iconList['spots']
+        }
+        else if(text == 'transfers') {
+          content = `<p>转运站：${item.name}</p>`
+          icon = this.iconList['transfers']
+        };
+        this.addMarker(icon, item.position.lat, item.position.lng, url, content, text, item.id);
+      }
+    },
+    infoWindowTable(data) { // 返回 统计显示 html
+      let content = '<div class="myInfoWindowTable">'
+      for (let i = 0; i < data.details.length; i ++) {
+        const item = data.details[i];
+        content += `<span>${item.name} : ${item.amount}</span>`
+      }
+      content += `<p>当天总计：${data.total}</p></div>`
+      return content;
+    },
+    getStatistics(id, text) { // 获取 统计
+      return this.getData(`/api/${text}/${id}/statistics`)
+          .then(res => {
+            // console.log(res);
+            if(!res.data) return null
+            return res.data
+          })
+    },
+    getData(url) { // get 请求数据
+      return axios.get(url).then(response => { return response }).catch(err => { return err });
+    },
+    async init_position() {
+      const gisPosition = localStorage.getItem("GISInitPosition");
+      if(gisPosition == null) {
+        // console.log('没有缓存');
+        await axios.get('/nova-vendor/laravel-nova-configuration/getAllConfigurations')
+            .then(response => {
+              // console.log(response);
+              response.data.map(item => {
+                item.key == "LOCAL_LATITUDE" ? this.beiyong.lat = item.value : '';
+                item.key == "LOCAL_LONGTITUDE" ? this.beiyong.lng = item.value : '';
+              });
+              // console.log(this.beiyong);
+              if(this.myMap == null) {
+                setTimeout(() => {
+                  this.myMap.setCenter(new AMap.LngLat(this.beiyong.lng, this.beiyong.lat));
+                }, 500);
+              } else {
+                this.myMap.setCenter(new AMap.LngLat(this.beiyong.lng, this.beiyong.lat));
+              }
+              localStorage.setItem("GISInitPosition", JSON.stringify(this.beiyong));
+              // console.log('换地址了');
+            });
+
+      }
+    },
+    showSelect(e, type) {   //  显示 - 选择 GIS 类型显示
+      // console.log(type);
+      if(type != this.statusRecord.types) { //  打开新的
+        this.statusRecord.isshowSelect = true;
+      } else {
+        this.statusRecord.isshowSelect = !this.statusRecord.isshowSelect;
+      }
+      // console.log(this.statusRecord.isshowSelect);
+      this.statusRecord.types = type;
+      localStorage.setItem('statusRecord', JSON.stringify(this.statusRecord));
+    },
+    async infoWindowOpen(e) { //  鼠标悬停，打开信息窗
+      // console.log(e);
+      if (e.lnglat === undefined) return; //  加载时，不显示
+      var infoWindow = this.infoWindows;
+      if(infoWindow.CLASS_NAME == undefined) {
+        infoWindow = new AMap.InfoWindow({
+          offset: new AMap.Pixel(30, 10),
+          closeWhenClickMap: true,
+          anchor: 'top-left'
+        });
+        // console.log('鼠标移入');
+      }
+      let content = e.target.myContent
+      // const data = e.target.getExtData()
+      // console.log('id： ', data)
+      // if(data.id) {
+      //   let tongji = await this.getStatistics(data.id, data.text)
+      //   if(!tongji) {
+      //     content += '<h3>部分信息获取错误，请稍后重试</h3>'
+      //   } else if(data.text == 'addresses') {
+      //     content += `<p>入住率：${tongji['入住率']}</p><p>参与率：${tongji['参与率']}</p>`
+      //   } else {
+      //     // const table = await this.infoWindowTable(tongji.day);
+      //     // content += table
+      //   }
+      // }
+      infoWindow.setContent(content);
+      infoWindow.open(this.myMap, e.target.getPosition());
+      this.infoWindows = infoWindow;
+    },
+    infoWindowClose(e) { //  鼠标移除，关闭信息窗
+      if (e.lnglat === undefined) return; //  加载时，不显示
+      // console.log('鼠标移出');
+      if (this.infoWindows.CLASS_NAME === undefined) return; //  空，不显示
+      this.infoWindows.close();
+    },
+    Utf8ArrayToStr(array) { //  Utf8Array 转字符串
+      var out, i, len, c;
+      var char2, char3;
+      out = "";
+      len = array.length;
+      i = 0;
+      while(i < len) {
+        c = array[i++];
+        switch(c >> 4) {
+          case 0: case 1: case 2: case 3: case 4: case 5: case 6: case 7:
+            // 0xxxxxxx
+            out += String.fromCharCode(c);
+            break;
+          case 12: case 13:
+            // 110x xxxx   10xx xxxx
+            char2 = array[i++];
+            out += String.fromCharCode(((c & 0x1F) << 6) | (char2 & 0x3F));
+            break;
+          case 14:
+            // 1110 xxxx  10xx xxxx  10xx xxxx
+            char2 = array[i++];
+            char3 = array[i++];
+            out += String.fromCharCode(((c & 0x0F) << 12) |
+                ((char2 & 0x3F) << 6) |
+                ((char3 & 0x3F) << 0));
+            break;
+        }
+      }
+      return out;
+    },
     checkFull(){
       //判断浏览器是否处于全屏状态 （需要考虑兼容问题）
       //火狐浏览器
@@ -214,357 +446,6 @@ export default {
       // 3: c {Q: 37.27228303646688, R: 120.82768333339669, lng: 120.827683, lat: 37.272283}
       // 4: c {Q: 38.62638474995909, R: 120.96325281055363, lng: 120.963253, lat: 38.626385}
       this.fullscreen = !this.fullscreen;
-    },
-    init_map() {  //  初始化地图
-      this.myMap = amapManager.getMap();
-      //绑定地图移动与缩放事件
-      this.myMap.on('moveend', this.mapZoom);
-      this.myMap.setZoom([7,18]);
-      // console.log(this.beiyong);
-      // console.log(this.userMessage);
-      this.mapZoom();
-    },
-    init_lodingState(state) {  //  初始化加载
-    },
-    addMarker(icon, lat, lng, url, content, text, id) {
-      let marker = new AMap.Marker({
-        vid: text + '_' + id,
-        position: [lng, lat],
-        // title: `鼠标左键双击，查看详情页`,
-        clickable: true,
-        autoRotation: true,
-        icon: icon,
-        extData: {
-          id: id,
-          text: text
-        }
-      });
-      marker.myContent = content;
-      marker.on("mouseover", this.infoWindowOpen);
-      marker.emit("mouseover", { target: marker});
-      marker.on("mouseout", this.infoWindowClose);
-      marker.emit("mouseout", { target: marker});
-      marker.on("dblclick", () => { //  左双击跳转
-        window.location.href = `/resources/${url}`
-      });
-      marker.setMap(this.myMap);
-    },
-    showChecked(e) {
-      // console.log(e);
-      // console.log(e.target.checked);
-      // console.log(e.target.value);
-      if(e.target.checked) {
-          if(e.target.value == 'satellite') {    //  开启卫星地图
-          this.myMap.add(this.layers[0]);
-          this.statusRecord.satellite = e.target.checked
-        } else if(e.target.value == 'roadNet') {    //  开启路网
-          this.myMap.add(this.layers[1])
-          this.statusRecord.roadNet = e.target.checked
-        } else {
-          this.statusRecord[e.target.value] = e.target.checked
-        }
-      } else {
-          if(e.target.value == 'satellite') {    //  关闭卫星地图
-          this.myMap.remove(this.layers[0]);
-          this.statusRecord.satellite = e.target.checked
-        } else if(e.target.value == 'roadNet') {    //  关闭路网
-          this.myMap.remove(this.layers[1])
-          this.statusRecord.roadNet = e.target.checked
-        } else {
-          this.statusRecord[e.target.value] = e.target.checked
-        }
-      }
-      localStorage.setItem('statusRecord', JSON.stringify(this.statusRecord));
-      const zoom = this.myMap.getZoom();
-      zoom >= 17 ? this.detailMarker(this.currentData) : this.addPolymerize(this.currentData);
-    },
-    init_mqtt(){
-      this.client = mqtt.connect('wss://iot.ljfl.ltd:443/mqtt', {
-          username: "test",
-          password: "test"
-      });
-      //订阅后端给你发的字段 在on里面接收
-      // console.log('准备开启mqtt链接');
-      this.client.on('connect', () => {
-        console.log('连接成功');
-          this.client.subscribe('tttt', function (err) {
-              if (!err) {
-                  console.log("订阅成功:" + 'tttt');
-              }
-          })
-      });
-      this.client.on('message', (topic, message) => {
-          // console.log('接受消息');
-          if (topic === 'tttt') {
-            //DOSOMETHING
-            // console.log(message);
-            const mes = this.Utf8ArrayToStr(message)
-            // console.log(mes);
-            if(mes) {
-              const users = JSON.parse(mes)
-              // console.log(users);
-              if(users.lat != 0 && users.lng != 0) {
-                users.time = new Date();
-                let isOk = true;
-                const arr = this.userMessage.map((item) => {
-                  if (users.id == item.id) {
-                    isOk = false;
-                    return users;
-                  }
-                  return item;
-                });
-                if (isOk) this.userMessage.push(users);
-                else this.userMessage = arr;
-                // console.log(this.userMessage);
-                localStorage.setItem("requestMarker", JSON.stringify(this.userMessage));
-              }
-            }
-          }
-      })
-      //连接断开
-      // client.end()
-    },
-    delMarker(id) {
-      // const arr = this.deviceClusters.kb;
-      // // console.log(arr)
-      // if(arr) {
-      //   arr.forEach(element => {
-      //     if(id == element.Ce.vid) { //  点存在删除
-      //       this.deviceClusters.removeMarker(element);
-      //     }
-      //   });
-      // }
-    },
-    regularCheck() {  //  判断有效期
-      const markerArr = JSON.parse(localStorage.getItem("requestMarker"));
-      const thisTime = new Date();
-      if (markerArr) {
-        markerArr.map((item) => {
-          if (thisTime - new Date(item.time) > 300000) {
-            // console.log(item);
-            console.log("user_" + item.id + " 连接超时");
-            // this.delMarker("user_" + item.id); // 删除点
-            this.delCache(item.id);
-          }
-        });
-      }
-    },
-    delCache(id) {  //  清除指定缓存和存储数组
-      this.userMessage.forEach((element, index) => { //  删除数组 和缓存 里的点信息
-        if(id === element.id) {
-          // console.log('删除的数据');
-          this.userMessage.splice(index, 1)
-          // console.log(this.userMessage);
-          localStorage.setItem("requestMarker", JSON.stringify(this.userMessage));
-        }
-      });
-    },
-    mapZoom() { // 地图缩放
-      const zoom = this.myMap.getZoom();
-      console.log('缩放： ', zoom);
-      const bounds = this.myMap.getBounds();
-      // console.log('东北(右上)角： ', bounds.northeast)
-      // console.log('西南(左下)角： ', bounds.southwest)
-      this.getData(`/api/addresses/search?northeast={"lat": ${bounds.northeast.lat}, "lng": ${bounds.northeast.lng}}&southwest={"lat": ${bounds.southwest.lat}, "lng": ${bounds.southwest.lng}}&level=${zoom}`)
-        .then(res => {
-          // console.log(res)
-          this.currentData = res.data;
-          zoom >= 17 ? this.detailMarker(res.data) : this.addPolymerize(res.data);
-      });
-    },
-    detailMarker(data) {
-      this.myMap.clearMap(); // 清除原覆盖物
-      // console.log('详细信息： ', data);
-      if(this.statusRecord.devices) this.manageData(data.devices, 'devices'); // 显示设备
-      if(this.statusRecord.spots) this.manageData(data.spots, 'spots'); // 显示清运点
-      if(this.statusRecord.transfers) this.manageData(data.transfers, 'transfers'); // 显示转运站
-      if(this.statusRecord.community) this.manageData(data.communities, 'addresses'); // 显示小区
-    },
-    async manageData(data, text) { // 信息分类 添加点
-      for (let i = 0; i < data.length; i++) {
-        const item = data[i];
-        const url = `${text}/${item.id}`;
-        let content, icon;
-        if(text == 'addresses') {
-          content = `<p>小区：${item.name}</p>`
-          icon = this.iconList.community
-        }
-        else if(text == 'devices') {
-          content = `<p>设备编号：${item.deviceno}</p><p>备注：${item.memo}</p>`
-          icon = this.iconList['devices']
-        }
-        else if(text == 'spots') {
-          content = `<p>清运点：${item.name}</p>`
-          icon = this.iconList['spots']
-        }
-        else if(text == 'transfers') {
-          content = `<p>转运站：${item.name}</p>`
-          icon = this.iconList['transfers']
-        };
-        this.addMarker(icon, item.position.lat, item.position.lng, url, content, text, item.id);
-      }
-    },
-    infoWindowTable(data) { // 返回 统计显示 html
-      let content = '<div class="myInfoWindowTable">'
-      for (let i = 0; i < data.details.length; i ++) {
-        const item = data.details[i];
-        content += `<span>${item.name} : ${item.amount}</span>`
-      }
-      content += `<p>当天总计：${data.total}</p></div>`
-      return content;
-    },
-    async addPolymerize(data) { // 添加聚合点
-      this.myMap.clearMap(); // 清除原覆盖物
-      for (let i = 0; i < data.length; i++) {
-        const item = data[i];
-        let sum = 0, content = `<p>名称：${item.name}</p>`;
-        if(this.statusRecord.devices) { // 显示设备
-          content += `<p>设备：${item.deviceCount}</p>`
-          sum += item.deviceCount
-        }
-        if(this.statusRecord.spots) { // 显示清运点
-          content += `<p>清运点：${item.spotCount}</p>`
-          sum += item.spotCount
-        }
-        if(this.statusRecord.transfers) { // 显示转运站
-          content += `<p>转运站：${item.transferCount}</p>`
-          sum += item.transferCount
-        }
-        if(this.statusRecord.community) { // 显示小区
-          content += `<p>小区：${item.communityCount}</p>`
-          sum += item.communityCount
-        }
-        content += `<p>总数：${sum}</p>`;
-        let marker = new AMap.Marker({
-          position: new AMap.LngLat(item.position.lng,item.position.lat),
-          content: `<div class="myLabel"><p>${sum}</p></div>`,
-          offset: new AMap.Pixel(-13, -30),
-          bubble: true,
-          extData: {
-            id: item.id,
-            text: 'addresses'
-          }
-        });
-        marker.setMap(this.myMap);
-        marker.myContent = content;
-        marker.on("mouseover", this.infoWindowOpen);
-        marker.emit("mouseover", { target: marker});
-        marker.on("mouseout", this.infoWindowClose);
-        marker.emit("mouseout", { target: marker});
-      }
-    },
-    getStatistics(id, text) { // 获取 统计
-       return this.getData(`/api/${text}/${id}/statistics`)
-      .then(res => {
-        // console.log(res);
-        if(!res.data) return null
-        return res.data
-      })
-    },
-    getData(url) { // get 请求数据
-      return axios.get(url).then(response => { return response }).catch(err => { return err });
-    },
-    async init_position() {
-      const gisPosition = localStorage.getItem("GISInitPosition");
-      if(gisPosition == null) {
-        // console.log('没有缓存');
-        await axios.get('/nova-vendor/laravel-nova-configuration/getAllConfigurations')
-        .then(response => {
-          // console.log(response);
-          response.data.map(item => {
-            item.key == "LOCAL_LATITUDE" ? this.beiyong.lat = item.value : '';
-            item.key == "LOCAL_LONGTITUDE" ? this.beiyong.lng = item.value : '';
-          });
-          // console.log(this.beiyong);
-          if(this.myMap == null) {
-            setTimeout(() => {
-              this.myMap.setCenter(new AMap.LngLat(this.beiyong.lng, this.beiyong.lat));
-            }, 500);
-          } else {
-            this.myMap.setCenter(new AMap.LngLat(this.beiyong.lng, this.beiyong.lat));
-          }
-          localStorage.setItem("GISInitPosition", JSON.stringify(this.beiyong));
-          // console.log('换地址了');
-        });
-
-      }
-    },
-    showSelect(e, type) {   //  显示 - 选择 GIS 类型显示
-      // console.log(type);
-      if(type != this.statusRecord.types) { //  打开新的
-        this.statusRecord.isshowSelect = true;
-      } else {
-        this.statusRecord.isshowSelect = !this.statusRecord.isshowSelect;
-      }
-      // console.log(this.statusRecord.isshowSelect);
-      this.statusRecord.types = type;
-      localStorage.setItem('statusRecord', JSON.stringify(this.statusRecord));
-    },
-    async infoWindowOpen(e) { //  鼠标悬停，打开信息窗
-      // console.log(e);
-      if (e.lnglat === undefined) return; //  加载时，不显示
-      var infoWindow = this.infoWindows;
-      if(infoWindow.CLASS_NAME == undefined) {
-        infoWindow = new AMap.InfoWindow({
-          offset: new AMap.Pixel(30, 10),
-          closeWhenClickMap: true,
-          anchor: 'top-left'
-        });
-        // console.log('鼠标移入');
-      }
-      let content = e.target.myContent
-      const data = e.target.getExtData()
-      // console.log('id： ', data)
-      if(data.id) {
-        let tongji = await this.getStatistics(data.id, data.text)
-        if(!tongji) {
-          content += '<h3>部分信息获取错误，请稍后重试</h3>'
-        } else if(data.text == 'addresses') {
-          content += `<p>入住率：${tongji['入住率']}</p><p>参与率：${tongji['参与率']}</p>`
-        } else {
-          const table = await this.infoWindowTable(tongji.day);
-          content += table
-        }
-      }
-      infoWindow.setContent(content);
-      infoWindow.open(this.myMap, e.target.getPosition());
-      this.infoWindows = infoWindow;
-    },
-    infoWindowClose(e) { //  鼠标移除，关闭信息窗
-      if (e.lnglat === undefined) return; //  加载时，不显示
-      // console.log('鼠标移出');
-      if (this.infoWindows.CLASS_NAME === undefined) return; //  空，不显示
-      this.infoWindows.close();
-    },
-    Utf8ArrayToStr(array) { //  Utf8Array 转字符串
-        var out, i, len, c;
-        var char2, char3;
-        out = "";
-        len = array.length;
-        i = 0;
-        while(i < len) {
-          c = array[i++];
-          switch(c >> 4) {
-            case 0: case 1: case 2: case 3: case 4: case 5: case 6: case 7:
-              // 0xxxxxxx
-              out += String.fromCharCode(c);
-              break;
-            case 12: case 13:
-              // 110x xxxx   10xx xxxx
-              char2 = array[i++];
-              out += String.fromCharCode(((c & 0x1F) << 6) | (char2 & 0x3F));
-              break;
-            case 14:
-              // 1110 xxxx  10xx xxxx  10xx xxxx
-              char2 = array[i++];
-              char3 = array[i++];
-              out += String.fromCharCode(((c & 0x0F) << 12) |
-                            ((char2 & 0x3F) << 6) |
-                            ((char3 & 0x3F) << 0));
-              break;
-          }
-        }
-        return out;
     },
   },
 
