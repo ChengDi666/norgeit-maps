@@ -56,7 +56,6 @@ export default {
   data() {
     let self = this;
     return {
-      userMessage: [],
       beiyong: {lat: "32.059358",lng: "118.796628"},
       amapManager,
       zoom: 12,
@@ -81,11 +80,12 @@ export default {
       },
       statusRecord: {
         isshowSelect: true, // 显示选择界面
-        types: "xianshi", // 展开菜单的类
+        types: "satellite", // 展开菜单的类
         spots: true,  // 显示清运点
         transfers: true,  // 显示转运站
         community: true,  // 显示小区
         devices: true,  // 显示设备
+        satellite: false
       },
       client: {},
       infoWindows: {},
@@ -114,7 +114,6 @@ export default {
     };
   },
   created() {
-    this.userMessage = JSON.parse(localStorage.getItem("requestMarker")) ? JSON.parse(localStorage.getItem("requestMarker")) : [];
     this.values = JSON.parse(localStorage.getItem("GISInitPosition")) ? JSON.parse(localStorage.getItem("GISInitPosition")) : {};
     this.statusRecord = JSON.parse(localStorage.getItem('statusRecord')) ? JSON.parse(localStorage.getItem('statusRecord')) : this.statusRecord;
     // console.log(this.statusRecord)
@@ -154,7 +153,6 @@ export default {
       this.myMap.setZoom([7,18]);
       this.getMessage(this.showType);
       // console.log(this.beiyong);
-      // console.log(this.userMessage);
       this.mapZoom();
     },
     init_lodingState(state) {  //  初始化加载
@@ -205,17 +203,6 @@ export default {
       }
       localStorage.setItem('statusRecord', JSON.stringify(this.statusRecord));
     },
-
-    delCache(id) {  //  清除指定缓存和存储数组
-      this.userMessage.forEach((element, index) => { //  删除数组 和缓存 里的点信息
-        if(id === element.id) {
-          // console.log('删除的数据');
-          this.userMessage.splice(index, 1)
-          // console.log(this.userMessage);
-          localStorage.setItem("requestMarker", JSON.stringify(this.userMessage));
-        }
-      });
-    },
     getMessage(type) {
       if (type != 'transfer') {
         type += 's'
@@ -237,10 +224,10 @@ export default {
       // console.log('西南(左下)角： ', bounds.southwest)
     },
     detailMarker(data) {
-      // this.myMap.clearMap(); // 清除原覆盖物
       // console.log('详细信息： ', data);
-      if(this.showType == 'user') this.manageData(data, 'users'); // 显示设备
-      else if(this.showType == 'truck') this.manageData(data, 'trucks'); // 显示设备
+      if(this.showType == 'user') this.manageData(data, 'users'); // 显示用户
+      else if(this.showType == 'truck') this.manageData(data, 'trucks'); // 显示车辆
+      else if(this.showType == 'device') this.manageData(data, 'devices'); // 显示设备
       else if(this.showType == 'spot') this.manageData(data, 'spots'); // 显示清运点
       else if(this.showType == 'transfer')this.manageData(data, 'transfers'); // 显示转运站
     },
@@ -260,6 +247,10 @@ export default {
         else if(text == 'trucks') {
           content = `<p>车牌：${item.licenseNO}</p>`
           icon = this.iconList['truck']
+        }
+        else if(text == 'devices') {
+          content = `<p>设备名称：${item.deviceno}</p>`
+          icon = this.iconList['devices']
         }
         else if(text == 'spots') {
           content = `<p>清运点：${item.name}</p>`

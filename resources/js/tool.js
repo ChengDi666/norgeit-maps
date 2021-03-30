@@ -1,5 +1,6 @@
 import VueAMap from 'vue-amap';
 Nova.booting((Vue, router, store) => {
+
   router.addRoutes([
     {
       name: 'maps',
@@ -25,9 +26,13 @@ Nova.booting((Vue, router, store) => {
       name: 'mapsTransfer',
       path: '/maps/transfer',
       component: require('./components/staticMap')
+    },
+    {
+      name: 'mapsDevice',
+      path: '/maps/device',
+      component: require('./components/staticMap')
     }
   ])
-
   Vue.use(VueAMap);
   VueAMap.initAMapApiLoader({
     key: 'eeb7e7e703b57e8d106f6f352563bd71',
