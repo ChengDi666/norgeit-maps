@@ -49,7 +49,6 @@
 <script>
 import { AMapManager, lazyAMapApiLoaderInstance } from "vue-amap";
 let amapManager = new AMapManager(); // 新建生成地图画布
-let mqtt = require('mqtt');
 
 export default {
   data() {
@@ -62,6 +61,7 @@ export default {
       position: [],
       values: {},
       layers: [],
+      markerList: [], // 所有点
       trucks: [],   //  所有车辆
       iconList: {
         //  车辆图标
@@ -163,7 +163,11 @@ export default {
         // title: `鼠标左键双击，查看详情页`,
         clickable: true,
         autoRotation: true,
-        icon: icon
+        icon: icon,
+        extData: {
+          id: id,
+          text: text
+        }
       });
       marker.myContent = content;
       marker.on("mouseover", this.infoWindowOpen);
@@ -174,6 +178,7 @@ export default {
         window.location.href = `/resources/${url}`
       });
       marker.setMap(this.myMap);
+      this.markerList.push(marker);
     },
     showChecked(e) {
       // console.log(e);
@@ -206,6 +211,10 @@ export default {
       if (type != 'transfer') {
         type += 's'
       }
+      if (type == 'communityCounts') {
+        type = 'addresses/communityCounts'
+      }
+      // console.log(type)
       this.getData(`/api/${type}`)
         .then(res => {
           // console.log(res)
@@ -217,7 +226,7 @@ export default {
     },
     mapZoom() { // 地图缩放
       const zoom = this.myMap.getZoom();
-      console.log('缩放： ', zoom);
+      // console.log('缩放： ', zoom);
       const bounds = this.myMap.getBounds();
       // console.log('东北(右上)角： ', bounds.northeast)
       // console.log('西南(左下)角： ', bounds.southwest)
@@ -229,18 +238,19 @@ export default {
       else if(this.showType == 'device') this.manageData(data, 'devices'); // 显示设备
       else if(this.showType == 'spot') this.manageData(data, 'spots'); // 显示清运点
       else if(this.showType == 'transfer')this.manageData(data, 'transfers'); // 显示转运站
+      else if(this.showType == 'communityCount')this.manageData(data, 'addresses'); // 显示转运站
     },
     async manageData(data, text) { // 信息分类 添加点
       for (let i = 0; i < data.length; i++) {
         const item = data[i];
         if(!item.position || !item.position.lat) {
           // console.log('没有地址信息');
-          break
+          continue
         }
-        const url = `${text}/${item.id}`;
+        let url = `${text}/${item.id}`;
         let content, icon;
         if(text == 'users') {
-          content = `<p>用户：${item.name}</p>`
+          content = `<p>名称：${item.name}</p>`
           icon = this.iconList['user']
         }
         else if(text == 'trucks') {
@@ -248,21 +258,27 @@ export default {
           icon = this.iconList['truck']
         }
         else if(text == 'devices') {
-          content = `<p>设备名称：${item.deviceno}</p>`
+          content = `<p>名称：${item.deviceno}</p>`
           icon = this.iconList['devices']
         }
         else if(text == 'spots') {
-          content = `<p>清运点：${item.name}</p>`
+          content = `<p>名称：${item.name}</p>`
           icon = this.iconList['spots']
         }
         else if(text == 'transfers') {
-          content = `<p>转运站：${item.name}</p>`
+          content = `<p>名称：${item.name}</p>`
           icon = this.iconList['transfers']
+        }
+        else if(text == 'addresses') {
+          // url = `addresses/${item.id}`;
+          content = `<p>名称：${item.name}</p>`
+          icon = this.iconList['community']
         };
         this.addMarker(icon, item.position.lat, item.position.lng, url, content, text, item.id);
       }
     },
     infoWindowTable(data) { // 返回 统计显示 html
+      if (!data) return
       let content = '<div class="myInfoWindowTable">'
       for (let i = 0; i < data.details.length; i ++) {
         const item = data.details[i];
@@ -331,19 +347,19 @@ export default {
         // console.log('鼠标移入');
       }
       let content = e.target.myContent
-      // const data = e.target.getExtData()
+      const data = e.target.getExtData()
       // console.log('id： ', data)
-      // if(data.id) {
-      //   let tongji = await this.getStatistics(data.id, data.text)
-      //   if(!tongji) {
-      //     content += '<h3>部分信息获取错误，请稍后重试</h3>'
-      //   } else if(data.text == 'addresses') {
-      //     content += `<p>入住率：${tongji['入住率']}</p><p>参与率：${tongji['参与率']}</p>`
-      //   } else {
-      //     // const table = await this.infoWindowTable(tongji.day);
-      //     // content += table
-      //   }
-      // }
+      if(data.id) {
+        let tongji = await this.getStatistics(data.id, data.text)
+        if(!tongji) {
+          content += '<h3>部分信息获取错误，请稍后重试</h3>'
+        } else if(data.text == 'addresses') {
+          content += `<p>入住率：${tongji['入住率']}</p><p>参与率：${tongji['参与率']}</p>`
+        } else {
+          const table = await this.infoWindowTable(tongji.day);
+          if (table) content += table
+        }
+      }
       infoWindow.setContent(content);
       infoWindow.open(this.myMap, e.target.getPosition());
       this.infoWindows = infoWindow;
@@ -422,19 +438,6 @@ export default {
           element.msRequestFullscreen();
         }
       }
-      // bounds:
-      // [
-      //     [120.963253, 38.626385],
-      //     [122.231656, 38.377065],
-      //     [121.539673, 37.129842],
-      //     [120.827683, 37.272283],
-      //     [120.963253, 38.626385],
-      // ]
-      // 0: c {Q: 38.62638474995909, R: 120.96325281055363, lng: 120.963253, lat: 38.626385}
-      // 1: c {Q: 38.3770654967912, R: 122.23165644624925, lng: 122.231656, lat: 38.377065}
-      // 2: c {Q: 37.12984216477878, R: 121.53967304924674, lng: 121.539673, lat: 37.129842}
-      // 3: c {Q: 37.27228303646688, R: 120.82768333339669, lng: 120.827683, lat: 37.272283}
-      // 4: c {Q: 38.62638474995909, R: 120.96325281055363, lng: 120.963253, lat: 38.626385}
       this.fullscreen = !this.fullscreen;
     },
   },

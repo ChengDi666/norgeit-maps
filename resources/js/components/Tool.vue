@@ -40,12 +40,12 @@
       <div class="settings"  v-show="(statusRecord.isshowSelect)" style="background: #fff;padding: 10px;box-shadow: 0 0 5px #aaa;border-radius: 3px;font-size: 14px;line-height: 2rem;">
         <div v-if="statusRecord.types == 'xianshi'">
           <div style="display: flex;flex-flow: row wrap;justify-content: space-between;width: 200px;">
-            <label style="padding: 0 5px;width: 6rem;cursor: pointer;"> <input type="checkbox" value="spots"  @click="showChecked($event)" :checked='statusRecord.spots' /> 清运点 </label>
-            <label style="padding: 0 5px;width: 6rem;cursor: pointer;"> <input type="checkbox" value="transfers"  @click="showChecked($event)" :checked='statusRecord.transfers' /> 转运站 </label>
+            <label style="padding: 0 5px;width: 6rem;cursor: pointer;"> <input type="checkbox" value="spots"  @click="showChecked($event)" :checked='statusRecord.spots' /> 收集点 </label>
+            <label style="padding: 0 5px;width: 6rem;cursor: pointer;"> <input type="checkbox" value="transfers"  @click="showChecked($event)" :checked='statusRecord.transfers' /> 中转站 </label>
             <label style="padding: 0 5px;width: 6rem;cursor: pointer;"> <input type="checkbox" value="community"  @click="showChecked($event)" :checked='statusRecord.community' /> 小区 </label>
-            <label style="padding: 0 5px;width: 6rem;cursor: pointer;"> <input type="checkbox" value="devices"  @click="showChecked($event)" :checked='statusRecord.devices' /> 设备 </label>
-<!--            <label style="padding: 0 5px;"> <input type="checkbox" value="users" @click="showChecked($event)" :checked='statusRecord.users' /> 人员 </label>-->
-<!--            <label style="padding: 0 5px;"> <input type="checkbox" value="trucks"  @click="showChecked($event)" :checked='statusRecord.trucks' /> 车辆 </label>-->
+            <label style="padding: 0 5px;width: 6rem;cursor: pointer;"> <input type="checkbox" value="devices"  @click="showChecked($event)" :checked='statusRecord.devices' /> 投放点 </label>
+            <label style="padding: 0 5px;width: 6rem;cursor: pointer;"> <input type="checkbox" value="users" @click="showChecked($event)" :checked='statusRecord.users' /> 作业人员 </label>
+            <label style="padding: 0 5px;width: 6rem;cursor: pointer;"> <input type="checkbox" value="trucks"  @click="showChecked($event)" :checked='statusRecord.trucks' /> 作业车辆 </label>
           </div>
         </div>
         <div v-else-if="statusRecord.types == 'satellite'">
@@ -88,7 +88,7 @@ export default {
         transfers: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAMAAABEpIrGAAAAAXNSR0IB2cksfwAAAAlwSFlzAAALEwAACxMBAJqcGAAAAS9QTFRFAAAAEpjcEpbaEpbaE5fbE5fcEpbcEpbbEpbbEpbbEZbbEJXaEpbbEpbbEpbbEpbbEpbbEZbaEpXbEpbbEpbbEpbbEpbbEpbbE5fcEpbbEpbbEpbbE5baEpXaE5bcEpbbEpbbD5bhEpXaEpXbEZbbEpbcEpXbEpbbEpbbEpfaFZjdEpfbEpbbEpbbEpbbE5bcEpXZEpbbEpbbEpTbEpbbEZXbEpjeEJPcEpXaE5XbEpbbEpbbEpfbEpbcE5bZEpbbEpbbEpbbEpbbEZbbEZbbEZbbEpbbEpbbEpbbEpbbEpbcE5bdEpbbEpbbEpbbEpbbEpbbEpbbEpbbEpbbEpfbEpfaEpbcEpbaEZbbEpbbEZbbEpbaEZbaEpbbEpbbEpfbEZbbEpbbEZXbFJfcEpXc3LoIBAAAAGV0Uk5TABmEhigksvX5zzULY+T/7YQUFpLv+KUgB0TS5VsMd+iPCDm8x0pT3ONcCCOr/LUiH7GgDp9FHBI1iuHiSAsJRtjZMiqz56ZDcuyTCC/LaAlMoevNLAmYdkHgrjA0291LSY06GkP2V+noAAAA+UlEQVR4nGNgoDJgZGJmwSfPysbOwcmFU5qbh5cPCPgFBLHLCwmL8IGBqJg4FmkJSSk+OJCWkcVQICfPhwT4FRRRpZWU+dCAiiqyvJo6ujwfn4amFkxaWwdTGgh09fQh8gaGWOWBwMgYbgdEgNfE1MzcwtIKwkNxJFjE2sYWxLazd8CuwNGJwdnFVd3N3cMTuwIvbx9fcBiIYrXC04+Bwd8P2YnoJngGMPhBzOYL9MRqhWcgRBpoVoAnVl9AgZ8/A9gsLAo4gkBkcEhoGPZw4A+PEIt0jYpmiInFriAu3g7Etk3QwBGSfNaJSebJKSa8uIIaDdBbwYACABH+LOwMrvOZAAAAAElFTkSuQmCC',
         //  用户图标
         user: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAClklEQVRYR+2WQWjTUBjH/1+2JN3JXSamFRxDStohCnOiIOhQUHSiIoooKIha8DTcwZNQT14G4k2nXvQgeHCiB72ovXlRQXFNO3Zbm+4gO7jD2qTLJ8lWqO3SvBFLUZZTePm/7/973/e990Lo8EMd9sdfAYhWkndBfBbAZhC+OVW+Pd+Ty4gsLjRA1Eo8AXCl0cyRpcF5ms4GQYQC0MqDR0ly3vqYTEvy4nCBCkutIMIBWMkJAo/7GUjs7Cyo+e//MUDrEsxI8uKutpbATW3UTr4D85E/0kz4SaDzRTn7vq1NWAuuVZIXQXyVCHECXvCy88CM5PNB5u73UE0oYhCkaQKI2okpME41TLxmKsZjd2wbJzTb4hSIRgEMBRkAWCBgloFHtRj1c5oAtHJijCTcqxd1MXbMqcaPAR7YVLZVt64ixs1szHdMNZcOAGg+XEzF8EBjVvIhg68LrNpX4izzSP0x3VyCSlwHdRl1Eb6YirFbs/QhAn0OY+41HeF+UTbGanGaAPq5P2LZPSUAvStdSpNFJZvSLH2CQL6nnjAY8WtTzp30BfD2tpX4BGCv+87gVEnJTUZtfQ5MW4WNfIQMZEqKMdISoHFurKqPskNv6ibdcIBzBBwMBCJOg3EAIM80EGALb+9DuXuwPrDULd0E84naWESu9C7Z6itxANoP4HAgQKysj7NEtwD0+a+MP5hK7pBmJT4KAzjSPtDKcd0yAyJBCbhcVIynIlpvEcRpdmgPEY4FAgRlgIBnRcW45AZaDwBAw2AcDwRwBWv1gDtuRapfF2j2V600bQMI7OpVwQbARgb+rQywFAf4wupt+LIoG2fWdRestTPcDIjsGCLOwMEMJDrt6R2eMtXc89AAIuYimo7/lP4Gi1g0MPX9g/AAAAAASUVORK5CYII=',
-        // 设备
+        // 投放点
         devices: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAADWklEQVRYR9WWWWxMYRTH/+dOZzpFI2jsZFJNSxpUQiQEnSEifZHQGYkmVFBCQpDYE2JriHgQImKJJYgOIRLxYJmpB/uD2mJfi9JF0Wp1lr/cGa2OznrvQ/lev3PO/3f/3znfdwXtvKSd9fFvA3QtbpwkVFaoLo0aKjm7DYtMsRy7h8Hc65vruVbGu2psitmYV75UGiLlRXUgbVPTfCrYoyZPGi3Y2VSELkl1URnONEzEfm8hbj1gIM6gIOfzSlOZJoBuWzzFAFfqAaDQUbMq2akJIG2Lp4SgvRkgpeZ1rBMI7L83WFocgHBt9arkzZoAuhU3PQCRrSZn9Iu/X+saiIqq35Lkkeo1yTMTBrCsp/m7yROxeeKyIhh0vXq1aVRCAAUub/7XOg5895kbExAKGyqQuuwMLibl1fFco+vvoLC+Ti/1PBEgU694aL6cOzYuafL/AVBw1XMDxEiVtic+6jKiAr2C+cKjx8aaZsTlgBrEy/Y+VFCuSz1QCG8Um9OSUBM2B/td9h/qbaoTolSxOnM1AdBtLyMxJCqAwQz4GiOGkHLEYCtJ/B5QK/rd9tMgpoStnpoO6ZsH/vgI1JQB35+HH0PBBsl1rtPkgO+KY6sIl7dpnMwiIKUH8LMK/HIfkjYCaKwCXxxtoyOU2WIrOagJgK78OYTsa50sI3aAb88Cn66G1JT0AsCQDD4L1fKRE4y2U5e1AVzJH0+RSy3JnbMgmfPA20vD252zDry/DfD9ucHFr2TI+JMvtAFcmppOg9KSLJbAwwi+jvC69p8MfHsG1D5q1vMKKlPE6vZqAyCEbnt98yjKwAVghbu1QGhdFbD24Z994qVicw6INkUx39iQUewyBJJVBL47D7y/0LYHOlnAx7uBptrg5SdwSa7TphfgNH+PogzbCNADvjwRtLrVkuwlQH05qIp/uBg8KvCwwXqqUB+Ay7Gd4LIQsYxZgCkVoB9orATM3cGqW0DlzVCoGHdAwKVodIGvcDkWEtzVJs6YCnToDfh+BiG8aquELgHmiNV5QJ8DpY48+nk+Fmi4fZ8PE40TnMHziLBiO1A6bRD9/pa5SgREkpQsGXPyqT4AV6EZqL9DBH9O410CPAQ6DhfrocgvVTw9EK+g1riYR6C1cLx57Q7wCyGPSzCh+iY7AAAAAElFTkSuQmCC',
         // 小区
         community: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAA+0lEQVRYR+2WwQ2CMBSG/4cLmM5AJ9C7OITcPdop3MHIEDKEDqADmF4cwNQRMD2QVEPgkbaBQ3shgZfXj+/9SUuYeNHE+2OeAKLSdwCrATu1UbL0NdhpQFS64TQ2SnobnDdABlq/Vf5wbSxPusgWuNp30Q1MDjCUg9aAT2iDZMAntL0A3BFEAwBQGiVrdxSi0jsAFzeEDgCr3u0XdARcY9EAuKEdA8BSGi0DXKUpA9FGwA1VAkgGghkQ5+exoWxDQDEUQPu9AW72OaaeiF7mkO/b/j9nAfdPOHB9Ne5N6h/AnnL2tIu2rLWPkttOA9F27Wnsfa32hU4AycAXi2DUIUyrJxgAAAAASUVORK5CYII=',
@@ -99,7 +99,9 @@ export default {
         spots: true,  // 显示清运点
         transfers: true,  // 显示转运站
         community: true,  // 显示小区
-        devices: true,  // 显示设备
+        devices: true,  // 显示投放点
+        users: true,  // 显示人员
+        trucks: true,  // 显示车辆
       },
       client: {},
       infoWindows: {},
@@ -150,8 +152,8 @@ export default {
       }
     } else { //  点击传值
       this.values = this.$route.params;
-      console.log(this.values);
-      console.log(this.field);
+      // console.log(this.values);
+      // console.log(this.field);
       localStorage.setItem("GISInitPosition", JSON.stringify(this.values));
     }
     // console.log(this.values);
@@ -360,7 +362,7 @@ export default {
     },
     mapZoom() { // 地图缩放
       const zoom = this.myMap.getZoom();
-      console.log('缩放： ', zoom);
+      // console.log('缩放： ', zoom);
       const bounds = this.myMap.getBounds();
       // console.log('东北(右上)角： ', bounds.northeast)
       // console.log('西南(左下)角： ', bounds.southwest)
@@ -374,10 +376,12 @@ export default {
     detailMarker(data) {
       this.myMap.clearMap(); // 清除原覆盖物
       // console.log('详细信息： ', data);
-      if(this.statusRecord.devices) this.manageData(data.devices, 'devices'); // 显示设备
+      if(this.statusRecord.devices) this.manageData(data.devices, 'devices'); // 显示投放点
       if(this.statusRecord.spots) this.manageData(data.spots, 'spots'); // 显示清运点
       if(this.statusRecord.transfers) this.manageData(data.transfers, 'transfers'); // 显示转运站
       if(this.statusRecord.community) this.manageData(data.communities, 'addresses'); // 显示小区
+      if(this.statusRecord.users) this.manageData(data.users, 'users'); // 显示人员
+      if(this.statusRecord.trucks) this.manageData(data.trucks, 'trucks'); // 显示车辆
     },
     async manageData(data, text) { // 信息分类 添加点
       for (let i = 0; i < data.length; i++) {
@@ -389,15 +393,15 @@ export default {
           icon = this.iconList.community
         }
         else if(text == 'devices') {
-          content = `<p>设备编号：${item.deviceno}</p><p>备注：${item.memo}</p>`
+          content = `<p>投放点编号：${item.deviceno}</p><p>备注：${item.memo}</p>`
           icon = this.iconList['devices']
         }
         else if(text == 'spots') {
-          content = `<p>清运点：${item.name}</p>`
+          content = `<p>名称：${item.name}</p>`
           icon = this.iconList['spots']
         }
         else if(text == 'transfers') {
-          content = `<p>转运站：${item.name}</p>`
+          content = `<p>名称：${item.name}</p>`
           icon = this.iconList['transfers']
         };
         this.addMarker(icon, item.position.lat, item.position.lng, url, content, text, item.id);
@@ -417,21 +421,31 @@ export default {
       for (let i = 0; i < data.length; i++) {
         const item = data[i];
         let sum = 0, content = `<p>名称：${item.name}</p>`;
-        if(this.statusRecord.devices) { // 显示设备
-          content += `<p>设备：${item.deviceCount}</p>`
+        if(this.statusRecord.devices) { // 显示投放点
+          content += `<p>投放点：${item.deviceCount}</p>`
           sum += item.deviceCount
         }
         if(this.statusRecord.spots) { // 显示清运点
-          content += `<p>清运点：${item.spotCount}</p>`
+          content += `<p>收集点：${item.spotCount}</p>`
           sum += item.spotCount
         }
         if(this.statusRecord.transfers) { // 显示转运站
-          content += `<p>转运站：${item.transferCount}</p>`
+          content += `<p>中转站：${item.transferCount}</p>`
           sum += item.transferCount
         }
         if(this.statusRecord.community) { // 显示小区
           content += `<p>小区：${item.communityCount}</p>`
           sum += item.communityCount
+        }
+        if(this.statusRecord.users) { // 显示人员
+          const number = item.users ? item.users : 0
+          content += `<p>作业人员：${number}</p>`
+          sum += number
+        }
+        if(this.statusRecord.trucks) { // 显示车辆
+          const number = item.trucks ? item.trucks : 0
+          content += `<p>作业车辆：${number}</p>`
+          sum += number
         }
         content += `<p>总数：${sum}</p>`;
         let marker = new AMap.Marker({

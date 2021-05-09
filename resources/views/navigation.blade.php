@@ -29,26 +29,34 @@
         <span class="sidebar-icon"></span>
         <span class="sidebar-label text-sm">监控轨迹</span>
     </router-link>
+    <router-link tag="p" :to="{name: 'mapsCommunityCount', params: { lat: '{{$lat}}', lng: '{{$lng}}', type: 'communityCount'}}" class="cursor-pointer flex items-center font-normal dim text-white mb-4 text-base no-underline">
+        <span class="sidebar-icon"></span>
+        <span class="sidebar-label text-sm">小区</span>
+    </router-link>
+    <router-link tag="p" :to="{name: 'mapsDevice', params: { lat: '{{$lat}}', lng: '{{$lng}}', type: 'device'}}" class="cursor-pointer flex items-center font-normal dim text-white mb-4 text-base no-underline">
+        <span class="sidebar-icon"></span>
+        <span class="sidebar-label text-sm">投放点</span>
+    </router-link>
+    <router-link tag="p" :to="{name: 'mapsSpot', params: { lat: '{{$lat}}', lng: '{{$lng}}', type: 'spot'}}" class="cursor-pointer flex items-center font-normal dim text-white mb-4 text-base no-underline">
+        <span class="sidebar-icon"></span>
+        <span class="sidebar-label text-sm">收集点</span>
+    </router-link>
+    <router-link tag="p" :to="{name: 'mapsTransfer', params: { lat: '{{$lat}}', lng: '{{$lng}}', type: 'transfer'}}" class="cursor-pointer flex items-center font-normal dim text-white mb-4 text-base no-underline">
+        <span class="sidebar-icon"></span>
+        <span class="sidebar-label text-sm">中转站</span>
+    </router-link>
     <router-link tag="p" :to="{name: 'mapsUser', params: { lat: '{{$lat}}', lng: '{{$lng}}', type: 'user'}}" class="cursor-pointer flex items-center font-normal dim text-white mb-4 text-base no-underline">
         <span class="sidebar-icon"></span>
         <span class="sidebar-label text-sm">作业人员</span>
     </router-link>
-    <router-link tag="p" :to="{name: 'mapsDevice', params: { lat: '{{$lat}}', lng: '{{$lng}}', type: 'device'}}" class="cursor-pointer flex items-center font-normal dim text-white mb-4 text-base no-underline">
+    <router-link tag="p" :to="{name: 'mapsTruck', params: { lat: '{{$lat}}', lng: '{{$lng}}', type: 'truck'}}" class="cursor-pointer flex items-center font-normal dim text-white mb-6 text-base no-underline">
         <span class="sidebar-icon"></span>
-        <span class="sidebar-label text-sm">设备</span>
+        <span class="sidebar-label text-sm">作业车辆</span>
     </router-link>
-    <router-link tag="p" :to="{name: 'mapsTruck', params: { lat: '{{$lat}}', lng: '{{$lng}}', type: 'truck'}}" class="cursor-pointer flex items-center font-normal dim text-white mb-4 text-base no-underline">
-        <span class="sidebar-icon"></span>
-        <span class="sidebar-label text-sm">作业车</span>
-    </router-link>
-    <router-link tag="p" :to="{name: 'mapsSpot', params: { lat: '{{$lat}}', lng: '{{$lng}}', type: 'spot'}}" class="cursor-pointer flex items-center font-normal dim text-white mb-4 text-base no-underline">
-        <span class="sidebar-icon"></span>
-        <span class="sidebar-label text-sm">收集站</span>
-    </router-link>
-    <router-link tag="p" :to="{name: 'mapsTransfer', params: { lat: '{{$lat}}', lng: '{{$lng}}', type: 'transfer'}}" class="cursor-pointer flex items-center font-normal dim text-white mb-6 text-base no-underline">
-        <span class="sidebar-icon"></span>
-        <span class="sidebar-label text-sm">中转站</span>
-    </router-link>
+{{--    <router-link tag="p" :to="{name: 'maps3D', params: { lat: '{{$lat}}', lng: '{{$lng}}', type: '3D'}}" class="cursor-pointer flex items-center font-normal dim text-white mb-4 text-base no-underline">--}}
+{{--        <span class="sidebar-icon"></span>--}}
+{{--        <span class="sidebar-label text-sm">3D</span>--}}
+{{--    </router-link>--}}
 </div>
 
 <script>
