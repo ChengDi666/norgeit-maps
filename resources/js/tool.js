@@ -1,6 +1,7 @@
 import VueAMap from 'vue-amap';
-const echarts = require('echarts');
+// const echarts = require('echarts');
 import dataV from '@jiaminghi/data-view'
+import Echo from 'laravel-echo'
 Nova.booting((Vue, router, store) => {
 
   router.addRoutes([
@@ -46,9 +47,26 @@ Nova.booting((Vue, router, store) => {
     }
   ])
   Vue.use(VueAMap);
-  Vue.use(echarts);
+  // Vue.use(echarts);
   Vue.use(dataV)
-  Vue.prototype.$echarts = echarts
+  // Vue.prototype.$echarts = echarts
+  Vue.config.productionTip = false
+  window.Pusher = require('pusher-js')
+
+  window.Echo = new Echo({
+    broadcaster: 'pusher',
+    key: '37ac07c84056c35039ba',
+    cluster: 'ap1'
+    // forceTLS: true
+    // host: 'https://hefei.ljfl.ltd',
+    // wsHost: 'https://hefei.ljfl.ltd',
+    // wsHost: 'realtime-pusher.ably.io',
+    // wsPort: 443,
+    // disableStats: true,
+    // encrypted: true
+  })
+
+
   VueAMap.initAMapApiLoader({
     key: 'eeb7e7e703b57e8d106f6f352563bd71',
     plugin: ['AMap.Scale', 'AMap.OverView', 'AMap.DistrictSearch', 'AMap.ToolBar', 'AMap.MapType', 'AMap.GltfLoader', 'Geocoder','Geolocation','MarkerClusterer', 'DragRoute'],

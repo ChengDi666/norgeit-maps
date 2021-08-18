@@ -107,6 +107,9 @@ export default {
       infoWindows: {},
       fullscreen:false,
       myMap: {},
+      markerList: [],
+      clearMarkers: [],
+      truckList: [],
       events: {
         init(o) {
           // 构造官方卫星、路网图层
@@ -123,8 +126,6 @@ export default {
           self.init_position();
           // console.log('地图加载完成');
           self.init_map();
-          self.init_mqtt();
-          // self.init_lodingState(self.statusRecord);
         }
       },
     };
@@ -133,7 +134,6 @@ export default {
     this.userMessage = JSON.parse(localStorage.getItem("requestMarker")) ? JSON.parse(localStorage.getItem("requestMarker")) : [];
     this.values = JSON.parse(localStorage.getItem("GISInitPosition")) ? JSON.parse(localStorage.getItem("GISInitPosition")) : {};
     this.statusRecord = JSON.parse(localStorage.getItem('statusRecord')) ? JSON.parse(localStorage.getItem('statusRecord')) : this.statusRecord;
-    // console.log(this.statusRecord)
   },
   mounted() {
     setInterval(() => { //  一分钟检测一次
@@ -152,108 +152,99 @@ export default {
       }
     } else { //  点击传值
       this.values = this.$route.params;
-      // console.log(this.values);
-      // console.log(this.field);
       localStorage.setItem("GISInitPosition", JSON.stringify(this.values));
     }
-    // console.log(this.values);
     let lng = this.values.lng, lat = this.values.lat;
     this.center = [lng, lat];
     this.position = [lng, lat];
+    this.markerList['trucks'] = []
+    this.markerList['users'] = []
+    this.getData(`/api/trucks`).then(res => {
+      this.truckList = res.data.data
+    })
+    this.init_echo()
   },
 
   methods: {
-    checkFull(){
-      //判断浏览器是否处于全屏状态 （需要考虑兼容问题）
-      //火狐浏览器
-      var isFull = document.mozFullScreen||
-          document.fullScreen ||
-          //谷歌浏览器及Webkit内核浏览器
-          document.webkitIsFullScreen ||
-          document.webkitRequestFullScreen ||
-          document.mozRequestFullScreen ||
-          document.msFullscreenEnabled
-      if(isFull === undefined) isFull = false;
-      return isFull;
-    },
-    screen(){
-      // let element = document.documentElement;//设置后就是我们平时的整个页面全屏效果
-      let element = document.getElementById('myBigMap');//设置后就是   id==con_lf_top_div 的容器全屏
-      if (this.fullscreen) {
-        if (document.exitFullscreen) {
-          document.exitFullscreen();
-        } else if (document.webkitCancelFullScreen) {
-          document.webkitCancelFullScreen();
-        } else if (document.mozCancelFullScreen) {
-          document.mozCancelFullScreen();
-        } else if (document.msExitFullscreen) {
-          document.msExitFullscreen();
+    addMarker (icon, lat, lng, url, content, text, id) {
+      AMapUI.loadUI(['overlay/AwesomeMarker'], (AwesomeMarker) => {
+        // eslint-disable-next-line no-new
+        const marker = new AwesomeMarker({
+          awesomeIcon: icon, // 可用的icons参见： http://fontawesome.io/icons/
+          containerClassNames: 'my_icons',
+          iconLabel: {
+            style: {
+              color: '#333', // 设置颜色
+              fontSize: '18px'
+            }
+          },
+          iconStyle: 'blue', // 设置图标样式  #3CA0C8
+          position: [lng, lat],
+          extData: { id: id, text }
+        })
+        marker.myContent = content;
+        marker.on("mouseover", this.infoWindowOpen);
+        marker.emit("mouseover", { target: marker});
+        marker.on("mouseout", this.infoWindowClose);
+        marker.emit("mouseout", { target: marker});
+        marker.on("dblclick", () => { //  左双击跳转
+          window.location.href = `/resources/${url}`
+        });
+        if (text === 'users' || text === 'trucks') { // 处理设置为隐藏
+          this.markerList[text].push(marker)
         }
-      } else {
-        if (element.requestFullscreen) {
-          element.requestFullscreen();
-        } else if (element.webkitRequestFullScreen) {
-          element.webkitRequestFullScreen();
-        } else if (element.mozRequestFullScreen) {
-          element.mozRequestFullScreen();
-        } else if (element.msRequestFullscreen) {
-          // IE11
-          element.msRequestFullscreen();
+        marker.setMap(this.myMap);
+        if (text === 'users' || text === 'trucks') return // 不添加到清除
+        this.clearMarkers.push(marker)
+      })
+    },
+    init_echo () { // Echo
+      Echo.channel(`hefei.ljfl`).listen('.location-changed', (e) => {
+        // console.log(e.info)
+        this.echoPositionChange(e.info)
+      })
+    },
+    echoPositionChange (data) { // 位置变更
+      if (data.subject_type === 'App\\Models\\User') {
+        this.getData(`/api/users?user_id=${data.subject_id}`).then(res => {
+          if (!res.data.data || res.data.data.length === 0) return
+          let userMes = res.data.data[0]
+          userMes.position = data.position
+          this.updateMarker(userMes, 'users')
+        })
+        return
+      }
+      for (let index = 0; index < this.truckList.length; index++) {
+        const element = this.truckList[index]
+        if (element.id !== data.subject_id) continue
+        element.position = data.position
+        this.updateMarker(element, 'trucks')
+      }
+    },
+    updateMarker (data, type) { // 更新点
+      let text = data.name
+      if (type === 'trucks') text = data.licenseNO
+      for (const key in this.markerList[type]) { // 是否存在点
+        const element = this.markerList[type][key]
+        if (element.Ce.extData.text === text) {
+          const position = element.getPosition() // 点坐标
+          if (position.lat === data.position.lat && position.lng === data.position.lng) return // 坐标不变
+          element.setPosition(new AMap.LngLat(data.position.lng, data.position.lat)) // 更新点
+          element.setMap(this.myMap)
+          return
         }
       }
-      // bounds:
-      // [
-      //     [120.963253, 38.626385],
-      //     [122.231656, 38.377065],
-      //     [121.539673, 37.129842],
-      //     [120.827683, 37.272283],
-      //     [120.963253, 38.626385],
-      // ]
-      // 0: c {Q: 38.62638474995909, R: 120.96325281055363, lng: 120.963253, lat: 38.626385}
-      // 1: c {Q: 38.3770654967912, R: 122.23165644624925, lng: 122.231656, lat: 38.377065}
-      // 2: c {Q: 37.12984216477878, R: 121.53967304924674, lng: 121.539673, lat: 37.129842}
-      // 3: c {Q: 37.27228303646688, R: 120.82768333339669, lng: 120.827683, lat: 37.272283}
-      // 4: c {Q: 38.62638474995909, R: 120.96325281055363, lng: 120.963253, lat: 38.626385}
-      this.fullscreen = !this.fullscreen;
+      this.manageData([data], type) // 创建点
     },
     init_map() {  //  初始化地图
       this.myMap = amapManager.getMap();
       //绑定地图移动与缩放事件
       this.myMap.on('moveend', this.mapZoom);
       this.myMap.setZoom([7,18]);
-      // console.log(this.beiyong);
-      // console.log(this.userMessage);
       this.mapZoom();
-    },
-    init_lodingState(state) {  //  初始化加载
-    },
-    addMarker(icon, lat, lng, url, content, text, id) {
-      let marker = new AMap.Marker({
-        vid: text + '_' + id,
-        position: [lng, lat],
-        // title: `鼠标左键双击，查看详情页`,
-        clickable: true,
-        autoRotation: true,
-        icon: icon,
-        extData: {
-          id: id,
-          text: text
-        }
-      });
-      marker.myContent = content;
-      marker.on("mouseover", this.infoWindowOpen);
-      marker.emit("mouseover", { target: marker});
-      marker.on("mouseout", this.infoWindowClose);
-      marker.emit("mouseout", { target: marker});
-      marker.on("dblclick", () => { //  左双击跳转
-        window.location.href = `/resources/${url}`
-      });
-      marker.setMap(this.myMap);
+      this.getCurrentPositions(true)
     },
     showChecked(e) {
-      // console.log(e);
-      // console.log(e.target.checked);
-      // console.log(e.target.value);
       if(e.target.checked) {
           if(e.target.value == 'satellite') {    //  开启卫星地图
           this.myMap.add(this.layers[0]);
@@ -275,66 +266,13 @@ export default {
           this.statusRecord[e.target.value] = e.target.checked
         }
       }
+      if (!this.statusRecord.trucks) this.myMap.remove(this.markerList['trucks']) // 隐藏-移除车辆
+      else this.myMap.add(this.markerList['trucks']) // 显示-添加车辆
+      if (!this.statusRecord.users) this.myMap.remove(this.markerList['users']) // 隐藏-移除人员
+      else this.myMap.add(this.markerList['users']) // 显示-添加人员
       localStorage.setItem('statusRecord', JSON.stringify(this.statusRecord));
       const zoom = this.myMap.getZoom();
-      zoom >= 17 ? this.detailMarker(this.currentData) : this.addPolymerize(this.currentData);
-    },
-    init_mqtt(){
-      this.client = mqtt.connect('wss://iot.ljfl.ltd:443/mqtt', {
-          username: "test",
-          password: "test"
-      });
-      //订阅后端给你发的字段 在on里面接收
-      // console.log('准备开启mqtt链接');
-      this.client.on('connect', () => {
-        console.log('连接成功');
-          this.client.subscribe('tttt', function (err) {
-              if (!err) {
-                  console.log("订阅成功:" + 'tttt');
-              }
-          })
-      });
-      this.client.on('message', (topic, message) => {
-          // console.log('接受消息');
-          if (topic === 'tttt') {
-            //DOSOMETHING
-            // console.log(message);
-            const mes = this.Utf8ArrayToStr(message)
-            // console.log(mes);
-            if(mes) {
-              const users = JSON.parse(mes)
-              // console.log(users);
-              if(users.lat != 0 && users.lng != 0) {
-                users.time = new Date();
-                let isOk = true;
-                const arr = this.userMessage.map((item) => {
-                  if (users.id == item.id) {
-                    isOk = false;
-                    return users;
-                  }
-                  return item;
-                });
-                if (isOk) this.userMessage.push(users);
-                else this.userMessage = arr;
-                // console.log(this.userMessage);
-                localStorage.setItem("requestMarker", JSON.stringify(this.userMessage));
-              }
-            }
-          }
-      })
-      //连接断开
-      // client.end()
-    },
-    delMarker(id) {
-      // const arr = this.deviceClusters.kb;
-      // // console.log(arr)
-      // if(arr) {
-      //   arr.forEach(element => {
-      //     if(id == element.Ce.vid) { //  点存在删除
-      //       this.deviceClusters.removeMarker(element);
-      //     }
-      //   });
-      // }
+      this.detailMarker(this.currentData)
     },
     regularCheck() {  //  判断有效期
       const markerArr = JSON.parse(localStorage.getItem("requestMarker"));
@@ -342,9 +280,7 @@ export default {
       if (markerArr) {
         markerArr.map((item) => {
           if (thisTime - new Date(item.time) > 300000) {
-            // console.log(item);
             console.log("user_" + item.id + " 连接超时");
-            // this.delMarker("user_" + item.id); // 删除点
             this.delCache(item.id);
           }
         });
@@ -355,14 +291,12 @@ export default {
         if(id === element.id) {
           // console.log('删除的数据');
           this.userMessage.splice(index, 1)
-          // console.log(this.userMessage);
           localStorage.setItem("requestMarker", JSON.stringify(this.userMessage));
         }
       });
     },
     mapZoom() { // 地图缩放
       const zoom = this.myMap.getZoom();
-      // console.log('缩放： ', zoom);
       const bounds = this.myMap.getBounds();
       // console.log('东北(右上)角： ', bounds.northeast)
       // console.log('西南(左下)角： ', bounds.southwest)
@@ -370,18 +304,18 @@ export default {
         .then(res => {
           // console.log(res)
           this.currentData = res.data;
-          zoom >= 17 ? this.detailMarker(res.data) : this.addPolymerize(res.data);
+          this.detailMarker(res.data)
       });
     },
     detailMarker(data) {
-      this.myMap.clearMap(); // 清除原覆盖物
-      // console.log('详细信息： ', data);
+      this.myMap.remove(this.clearMarkers) // 清除原覆盖物
+      this.clearMarkers = []
       if(this.statusRecord.devices) this.manageData(data.devices, 'devices'); // 显示投放点
       if(this.statusRecord.spots) this.manageData(data.spots, 'spots'); // 显示清运点
       if(this.statusRecord.transfers) this.manageData(data.transfers, 'transfers'); // 显示转运站
       if(this.statusRecord.community) this.manageData(data.communities, 'addresses'); // 显示小区
-      if(this.statusRecord.users) this.manageData(data.users, 'users'); // 显示人员
-      if(this.statusRecord.trucks) this.manageData(data.trucks, 'trucks'); // 显示车辆
+      // if(this.statusRecord.users) this.manageData(data.users, 'users'); // 显示人员
+      // if(this.statusRecord.trucks) this.manageData(data.trucks, 'trucks'); // 显示车辆
     },
     async manageData(data, text) { // 信息分类 添加点
       for (let i = 0; i < data.length; i++) {
@@ -391,80 +325,40 @@ export default {
         if(text == 'addresses') {
           content = `<p>小区：${item.name}</p>`
           icon = this.iconList.community
+          icon = 'building'
         }
         else if(text == 'devices') {
           content = `<p>投放点编号：${item.deviceno}</p><p>备注：${item.memo}</p>`
           icon = this.iconList['devices']
+          icon = 'trash'
         }
         else if(text == 'spots') {
           content = `<p>名称：${item.name}</p>`
           icon = this.iconList['spots']
+          icon = 'home'
         }
         else if(text == 'transfers') {
           content = `<p>名称：${item.name}</p>`
           icon = this.iconList['transfers']
-        };
-        this.addMarker(icon, item.position.lat, item.position.lng, url, content, text, item.id);
+          icon = 'exchange'
+        } else if (text === 'users') {
+          content = `<p>名称：${item.name}</p>`
+          icon = 'user'
+        } else if (text === 'trucks') {
+          content = `<p>车辆：${item.licenseNO}</p>`
+          icon = 'truck'
+        }
+        this.addMarker(icon, item.position.lat, item.position.lng, url, content, text, item.id)
       }
     },
     infoWindowTable(data) { // 返回 统计显示 html
       let content = '<div class="myInfoWindowTable">'
       for (let i = 0; i < data.details.length; i ++) {
         const item = data.details[i];
-        content += `<span>${item.name} : ${item.amount}</span>`
+        content += `<span>${item.name} : ${parseInt(item.amount).toFixed(2)}</span>`
       }
-      content += `<p>当天总计：${data.total}</p></div>`
+      content += `<p>当天总计：${parseInt(data.total).toFixed(2)}</p></div>`
       return content;
-    },
-    async addPolymerize(data) { // 添加聚合点
-      this.myMap.clearMap(); // 清除原覆盖物
-      for (let i = 0; i < data.length; i++) {
-        const item = data[i];
-        let sum = 0, content = `<p>名称：${item.name}</p>`;
-        if(this.statusRecord.devices) { // 显示投放点
-          content += `<p>投放点：${item.deviceCount}</p>`
-          sum += item.deviceCount
-        }
-        if(this.statusRecord.spots) { // 显示清运点
-          content += `<p>收集点：${item.spotCount}</p>`
-          sum += item.spotCount
-        }
-        if(this.statusRecord.transfers) { // 显示转运站
-          content += `<p>中转站：${item.transferCount}</p>`
-          sum += item.transferCount
-        }
-        if(this.statusRecord.community) { // 显示小区
-          content += `<p>小区：${item.communityCount}</p>`
-          sum += item.communityCount
-        }
-        if(this.statusRecord.users) { // 显示人员
-          const number = item.users ? item.users : 0
-          content += `<p>作业人员：${number}</p>`
-          sum += number
-        }
-        if(this.statusRecord.trucks) { // 显示车辆
-          const number = item.trucks ? item.trucks : 0
-          content += `<p>作业车辆：${number}</p>`
-          sum += number
-        }
-        content += `<p>总数：${sum}</p>`;
-        let marker = new AMap.Marker({
-          position: new AMap.LngLat(item.position.lng,item.position.lat),
-          content: `<div class="myLabel"><p>${sum}</p></div>`,
-          offset: new AMap.Pixel(-13, -30),
-          bubble: true,
-          extData: {
-            id: item.id,
-            text: 'addresses'
-          }
-        });
-        marker.setMap(this.myMap);
-        marker.myContent = content;
-        marker.on("mouseover", this.infoWindowOpen);
-        marker.emit("mouseover", { target: marker});
-        marker.on("mouseout", this.infoWindowClose);
-        marker.emit("mouseout", { target: marker});
-      }
     },
     getStatistics(id, text) { // 获取 统计
        return this.getData(`/api/${text}/${id}/statistics`)
@@ -503,32 +397,27 @@ export default {
       }
     },
     showSelect(e, type) {   //  显示 - 选择 GIS 类型显示
-      // console.log(type);
       if(type != this.statusRecord.types) { //  打开新的
         this.statusRecord.isshowSelect = true;
       } else {
         this.statusRecord.isshowSelect = !this.statusRecord.isshowSelect;
       }
-      // console.log(this.statusRecord.isshowSelect);
       this.statusRecord.types = type;
       localStorage.setItem('statusRecord', JSON.stringify(this.statusRecord));
     },
     async infoWindowOpen(e) { //  鼠标悬停，打开信息窗
-      // console.log(e);
       if (e.lnglat === undefined) return; //  加载时，不显示
       var infoWindow = this.infoWindows;
       if(infoWindow.CLASS_NAME == undefined) {
         infoWindow = new AMap.InfoWindow({
-          offset: new AMap.Pixel(30, 10),
+          offset: new AMap.Pixel(10, 10),
           closeWhenClickMap: true,
           anchor: 'top-left'
         });
-        // console.log('鼠标移入');
       }
       let content = e.target.myContent
       const data = e.target.getExtData()
-      // console.log('id： ', data)
-      if(data.id) {
+      if(data.id && data.text !== 'users' && data.text !== 'trucks') {
         let tongji = await this.getStatistics(data.id, data.text)
         if(!tongji) {
           content += '<h3>部分信息获取错误，请稍后重试</h3>'
@@ -545,41 +434,71 @@ export default {
     },
     infoWindowClose(e) { //  鼠标移除，关闭信息窗
       if (e.lnglat === undefined) return; //  加载时，不显示
-      // console.log('鼠标移出');
       if (this.infoWindows.CLASS_NAME === undefined) return; //  空，不显示
       this.infoWindows.close();
     },
-    Utf8ArrayToStr(array) { //  Utf8Array 转字符串
-        var out, i, len, c;
-        var char2, char3;
-        out = "";
-        len = array.length;
-        i = 0;
-        while(i < len) {
-          c = array[i++];
-          switch(c >> 4) {
-            case 0: case 1: case 2: case 3: case 4: case 5: case 6: case 7:
-              // 0xxxxxxx
-              out += String.fromCharCode(c);
-              break;
-            case 12: case 13:
-              // 110x xxxx   10xx xxxx
-              char2 = array[i++];
-              out += String.fromCharCode(((c & 0x1F) << 6) | (char2 & 0x3F));
-              break;
-            case 14:
-              // 1110 xxxx  10xx xxxx  10xx xxxx
-              char2 = array[i++];
-              char3 = array[i++];
-              out += String.fromCharCode(((c & 0x0F) << 12) |
-                            ((char2 & 0x3F) << 6) |
-                            ((char3 & 0x3F) << 0));
-              break;
+    getCurrentPositions (panToLocation) { // 定位
+      AMap.plugin('AMap.Geolocation', () => {
+        var geolocation = new AMap.Geolocation({
+          enableHighAccuracy: true, // 是否使用高精度定位，默认:true
+          timeout: 10000, // 超过10秒后停止定位，默认：5s
+          buttonPosition: 'LB', // 定位按钮的停靠位置
+          buttonOffset: new AMap.Pixel(10, 20), // 定位按钮与设置的停靠位置的偏移量，默认：Pixel(10, 20)
+          // showCircle: true, // 定位成功后用圆圈表示定位精度范围，默认：true
+          panToLocation // 定位成功后将定位到的位置作为地图中心点，默认：true
+          // zoomToAccuracy: false // 定位成功后是否自动调整地图视野到定位点
+        })
+        this.myMap.addControl(geolocation)
+        geolocation.getCurrentPosition((status, result) => {
+          // console.log(result)
+          if (status === 'complete') {
+            // this.position = result.position
           }
-        }
-        return out;
+        })
+      })
     },
+    checkFull () { //判断浏览器是否处于全屏状态 （需要考虑兼容问题）
+      //火狐浏览器
+      var isFull = document.mozFullScreen||
+          document.fullScreen ||
+          //谷歌浏览器及Webkit内核浏览器
+          document.webkitIsFullScreen ||
+          document.webkitRequestFullScreen ||
+          document.mozRequestFullScreen ||
+          document.msFullscreenEnabled
+      if(isFull === undefined) isFull = false;
+      return isFull;
+    },
+    screen () {
+      let element = document.getElementById('myBigMap');//设置后就是   id==con_lf_top_div 的容器全屏
+      if (this.fullscreen) {
+        if (document.exitFullscreen) {
+          document.exitFullscreen();
+        } else if (document.webkitCancelFullScreen) {
+          document.webkitCancelFullScreen();
+        } else if (document.mozCancelFullScreen) {
+          document.mozCancelFullScreen();
+        } else if (document.msExitFullscreen) {
+          document.msExitFullscreen();
+        }
+      } else {
+        if (element.requestFullscreen) {
+          element.requestFullscreen();
+        } else if (element.webkitRequestFullScreen) {
+          element.webkitRequestFullScreen();
+        } else if (element.mozRequestFullScreen) {
+          element.mozRequestFullScreen();
+        } else if (element.msRequestFullscreen) {
+          // IE11
+          element.msRequestFullscreen();
+        }
+      }
+      this.fullscreen = !this.fullscreen;
+    }
   },
-
+  beforeRouteLeave (to, form, next) {
+    Echo.leaveChannel(`hefei.ljfl`);
+    next()
+  }
 };
 </script>
