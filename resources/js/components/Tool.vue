@@ -64,7 +64,6 @@
 <script>
 import { AMapManager, lazyAMapApiLoaderInstance } from "vue-amap";
 let amapManager = new AMapManager(); // 新建生成地图画布
-let mqtt = require('mqtt');
 
 export default {
   data() {
@@ -199,10 +198,10 @@ export default {
       })
     },
     init_echo () { // Echo
-      Echo.channel(`hefei.ljfl`).listen('.location-changed', (e) => {
-        // console.log(e.info)
-        this.echoPositionChange(e.info)
-      })
+      // Echo.channel(`hefei.ljfl`).listen('.location-changed', (e) => {
+      //   // console.log(e.info)
+      //   this.echoPositionChange(e.info)
+      // })
     },
     echoPositionChange (data) { // 位置变更
       if (data.subject_type === 'App\\Models\\User') {
@@ -497,7 +496,7 @@ export default {
     }
   },
   beforeRouteLeave (to, form, next) {
-    Echo.leaveChannel(`hefei.ljfl`);
+    // Echo.leaveChannel(`hefei.ljfl`);
     next()
   }
 };

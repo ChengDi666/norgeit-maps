@@ -152,9 +152,11 @@ export default {
       })
     },
     init_echo () { // Echo
-      Echo.channel(`hefei.ljfl`).listen('.location-changed', (e) => {
-        // console.log(e.info)
-        this.echoPositionChange(e.info)
+      Echo.channel('truck').listen('.GPS', event => {
+          let data = JSON.parse(event.message)
+          data.subject_type = 'App\\Models\\Truck'
+          // console.log(data);
+          this.echoPositionChange(data)
       })
     },
     echoPositionChange (data) { // 位置变更
@@ -172,8 +174,11 @@ export default {
           this.truckList = res.data.data
           for (let index = 0; index < this.truckList.length; index++) {
             const element = this.truckList[index]
-            if (element.id !== data.subject_id) continue
-            element.position = data.position
+            if (element.licenseNO !== data.ChannelName) continue
+            element.position = {
+              lat: data.Latitude,
+              lng: data.Longitude
+            }
             this.updateMarker(element, 'trucks')
           }
         })
@@ -430,7 +435,7 @@ export default {
     },
   },
   beforeRouteLeave (to, form, next) {
-    Echo.leaveChannel(`hefei.ljfl`);
+    // Echo.leaveChannel(`hefei.ljfl`);
     next()
   }
 };

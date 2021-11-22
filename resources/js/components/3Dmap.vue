@@ -83,7 +83,6 @@ export default {
           self.init_position();
           // console.log('地图加载完成');
           self.init_map();
-          // self.init_mqtt();
           // self.init_lodingState(self.statusRecord);
         }
       },

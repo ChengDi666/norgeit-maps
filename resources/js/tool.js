@@ -51,20 +51,31 @@ Nova.booting((Vue, router, store) => {
   Vue.use(dataV)
   // Vue.prototype.$echarts = echarts
   Vue.config.productionTip = false
-  window.Pusher = require('pusher-js')
+  // window.Pusher = require('pusher-js')
+
+  // window.Echo = new Echo({
+  //   broadcaster: 'pusher',
+  //   key: '37ac07c84056c35039ba',
+  //   cluster: 'ap1'
+  //   // forceTLS: true
+  //   // host: 'https://hefei.ljfl.ltd',
+  //   // wsHost: 'https://hefei.ljfl.ltd',
+  //   // wsHost: 'realtime-pusher.ably.io',
+  //   // wsPort: 443,
+  //   // disableStats: true,
+  //   // encrypted: true
+  // })
+
+
+
+  window.io = require('socket.io-client');
 
   window.Echo = new Echo({
-    broadcaster: 'pusher',
-    key: '37ac07c84056c35039ba',
-    cluster: 'ap1'
-    // forceTLS: true
-    // host: 'https://hefei.ljfl.ltd',
-    // wsHost: 'https://hefei.ljfl.ltd',
-    // wsHost: 'realtime-pusher.ably.io',
-    // wsPort: 443,
-    // disableStats: true,
-    // encrypted: true
-  })
+      broadcaster: 'socket.io',
+      host: 'http://127.0.0.1:6001'
+      // host: window.location.hostname + ':6001'
+  });
+
 
 
   VueAMap.initAMapApiLoader({
