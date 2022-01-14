@@ -14,12 +14,7 @@
         "laravel-mix": "^1.0"
     },
     "dependencies": {
-        "@jiaminghi/data-view": "^2.10.0",
-        "echarts": "^5.0.2",
-        "laravel-echo": "^1.8.0",
-        "pusher-js": "^7.0.3",
-        "socket.io": "^2.3.0",
-        "socket.io-client": "^2.3.0",
+        "mqtt": "^4.2.8",
         "vue": "^2.5.0",
         "vue-amap": "^0.5.9"
     }

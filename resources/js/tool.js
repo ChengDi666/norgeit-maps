@@ -1,8 +1,7 @@
 import VueAMap from 'vue-amap';
-// const echarts = require('echarts');
-import dataV from '@jiaminghi/data-view'
-import Echo from 'laravel-echo'
+import GISList from './components/GISList.vue';
 Nova.booting((Vue, router, store) => {
+  Vue.component('gis-list', GISList)
 
   router.addRoutes([
     {
@@ -10,11 +9,6 @@ Nova.booting((Vue, router, store) => {
       path: '/maps',
       component: require('./components/tool')
     },
-    // {
-    //   name: 'maps3D',
-    //   path: '/maps/3D',
-    //   component: require('./components/3Dmap')
-    // },
     {
       name: 'mapsCommunityCount',
       path: '/maps/communityCount',
@@ -47,36 +41,7 @@ Nova.booting((Vue, router, store) => {
     }
   ])
   Vue.use(VueAMap);
-  // Vue.use(echarts);
-  Vue.use(dataV)
-  // Vue.prototype.$echarts = echarts
   Vue.config.productionTip = false
-  // window.Pusher = require('pusher-js')
-
-  // window.Echo = new Echo({
-  //   broadcaster: 'pusher',
-  //   key: '37ac07c84056c35039ba',
-  //   cluster: 'ap1'
-  //   // forceTLS: true
-  //   // host: 'https://hefei.ljfl.ltd',
-  //   // wsHost: 'https://hefei.ljfl.ltd',
-  //   // wsHost: 'realtime-pusher.ably.io',
-  //   // wsPort: 443,
-  //   // disableStats: true,
-  //   // encrypted: true
-  // })
-
-
-
-  window.io = require('socket.io-client');
-
-  window.Echo = new Echo({
-      broadcaster: 'socket.io',
-      host: 'http://127.0.0.1:6001'
-      // host: window.location.hostname + ':6001'
-  });
-
-
 
   VueAMap.initAMapApiLoader({
     key: 'eeb7e7e703b57e8d106f6f352563bd71',

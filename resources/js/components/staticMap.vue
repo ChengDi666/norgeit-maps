@@ -31,8 +31,8 @@
           卫星
         </a>
       </div>
-      <div class="settings"  v-show="(statusRecord.isshowSelect)" style="background: #fff;padding: 10px;box-shadow: 0 0 5px #aaa;border-radius: 3px;font-size: 14px;line-height: 2rem;">
-        <div v-if="statusRecord.types == 'satellite'">
+      <div class="settings"  v-show="(statusRecord.isshowSelect)" style="background: #fff;box-shadow: 0 0 5px #aaa;border-radius: 3px;font-size: 14px;line-height: 2rem;">
+        <div v-if="statusRecord.types == 'satellite'" style="padding: 10px;">
           <div style="display: flex;flex-flow: row wrap;justify-content: space-between;width: 200px;">
             <label style="padding: 0 5px;width: 6rem;cursor: pointer;"> <input type="checkbox" value="satellite" @click="showChecked($event)" :checked='statusRecord.satellite' /> 卫星地图 </label>
             <label style="padding: 0 5px;width: 6rem;cursor: pointer;"> <input type="checkbox" value="roadNet" @click="showChecked($event)" :checked='statusRecord.roadNet' /> 路网 </label>
@@ -49,8 +49,10 @@
 <script>
 import { AMapManager, lazyAMapApiLoaderInstance } from "vue-amap";
 let amapManager = new AMapManager(); // 新建生成地图画布
+import mqtt from 'mqtt'
 
 export default {
+  props: ['field'],
   data() {
     let self = this;
     return {
@@ -121,10 +123,13 @@ export default {
     let lng = this.values.lng, lat = this.values.lat;
     this.center = [lng, lat];
     this.position = [lng, lat];
+    this.getData(`/api/trucks`).then(res => {
+      if (res.status == 200 && res.data && res.data.data) this.truckList = res.data.data
+    })
   },
 
   methods: {
-    addMarker (icon, lat, lng, url, content, text, id) {
+    addMarker (icon, lat, lng, url, content, text, id, name) {
       AMapUI.loadUI(['overlay/AwesomeMarker'], (AwesomeMarker) => {
         const marker = new AwesomeMarker({
           awesomeIcon: icon, // 可用的icons参见： http://fontawesome.io/icons/
@@ -137,7 +142,7 @@ export default {
           },
           iconStyle: 'blue', // 设置图标样式  #3CA0C8
           position: [lng, lat],
-          extData: { id: id, text }
+          extData: { id: id, text, name }
         })
         marker.myContent = content;
         marker.on("mouseover", this.infoWindowOpen);
@@ -152,11 +157,40 @@ export default {
       })
     },
     init_echo () { // Echo
-      Echo.channel('truck').listen('.GPS', event => {
-          let data = JSON.parse(event.message)
-          data.subject_type = 'App\\Models\\Truck'
-          // console.log(data);
-          this.echoPositionChange(data)
+      let mqttName = '', type
+      if (this.showType == 'truck') {
+        mqttName = 'getTruckGPS'
+        type = 'App\\Models\\User'
+      }
+      else if (this.showType == 'user') {
+        mqttName = 'getUserGPS'
+        type = 'App\\Models\\Truck'
+      }
+      else return
+      this.client = mqtt.connect("ws://iot.norgeit.com:8083/mqtt", {
+        username: "",
+        password: ""
+      });
+      this.client.on("connect", e =>{
+        console.log("连接成功");
+        this.client.subscribe(mqttName, (err)=> {
+          if (!err)  console.log("订阅成功:" + mqttName);
+        });
+      });
+      this.client.on("message", (topic, message) => {
+        // console.log(message)
+        const data = JSON.parse(this.Utf8ArrayToStr(message))
+        // console.log(data);
+        data.subject_type = type
+        this.echoPositionChange(data)
+      });
+      // 断开发起重连
+      this.client.on('reconnect', (error) => {
+          console.log('（mqtt）正在重连:', error, '时间:', new Date().toLocaleString())
+      })
+      // 链接异常处理
+      this.client.on('error', (error) => {
+          console.log('（mqtt）连接失败:', error)
       })
     },
     echoPositionChange (data) { // 位置变更
@@ -170,26 +204,24 @@ export default {
         return
       }
       if (data.subject_type === 'App\\Models\\Truck' && this.showType == 'truck') {
-        this.getData(`/api/trucks`).then(res => {
-          this.truckList = res.data.data
-          for (let index = 0; index < this.truckList.length; index++) {
-            const element = this.truckList[index]
-            if (element.licenseNO !== data.ChannelName) continue
-            element.position = {
-              lat: data.Latitude,
-              lng: data.Longitude
-            }
-            this.updateMarker(element, 'trucks')
+        for (let index = 0; index < this.truckList.length; index++) {
+          const element = this.truckList[index]
+          if (element.licenseNO !== data.ChannelName) continue
+          element.position = {
+            lat: data.Latitude,
+            lng: data.Longitude
           }
-        })
+          this.updateMarker(element, 'trucks')
+        }
       }
     },
     updateMarker (data, type) { // 更新点
       let text = data.name
       if (type === 'trucks') text = data.licenseNO
-      for (const key in this.markerList[type]) { // 是否存在点
-        const element = this.markerList[type][key]
-        if (element.Ce.extData.text === text) {
+      for (const key in this.markerList) { // 是否存在点
+        const element = this.markerList[key]
+        const extData = element.getExtData()
+        if (extData.text === type && extData.name === text) {
           const position = element.getPosition() // 点坐标
           if (position.lat === data.position.lat && position.lng === data.position.lng) return // 坐标不变
           element.setPosition(new AMap.LngLat(data.position.lng, data.position.lat)) // 更新点
@@ -201,12 +233,8 @@ export default {
     },
     init_map() {  //  初始化地图
       this.myMap = amapManager.getMap();
-      //绑定地图移动与缩放事件
-      this.myMap.on('moveend', this.mapZoom);
       this.myMap.setZoom([7,18]);
       this.getMessage(this.showType);
-      // console.log(this.beiyong);
-      this.mapZoom();
       this.getCurrentPositions(true)
     },
     showChecked(e) {
@@ -241,10 +269,6 @@ export default {
           if(res.data.data && res.data.data.length) this.detailMarker(res.data.data);
         });
     },
-    mapZoom() { // 地图缩放
-      const zoom = this.myMap.getZoom();
-      const bounds = this.myMap.getBounds();
-    },
     detailMarker(data) {
       if(this.showType == 'device') this.manageData(data, 'devices'); // 显示设备
       else if(this.showType == 'spot') this.manageData(data, 'spots'); // 显示清运点
@@ -254,36 +278,43 @@ export default {
       else if(this.showType == 'truck') { this.manageData(data, 'trucks'); this.init_echo() } // 显示车辆
     },
     async manageData(data, text) { // 信息分类 添加点
+      if (!data) return
       for (let i = 0; i < data.length; i++) {
         const item = data[i];
         if(!item.position || !item.position.lat) continue
         let url = `${text}/${item.id}`;
-        let content, icon;
+        let content, icon, name;
         if(text == 'users') {
           content = `<p>名称：${item.name}</p>`
+          name = item.name
           icon = 'user'
         }
         else if(text == 'trucks') {
           content = `<p>车牌：${item.licenseNO}</p>`
+          name = item.licenseNO
           icon = 'truck'
         }
         else if(text == 'devices') {
           content = `<p>名称：${item.deviceno}</p>`
+          name = item.deviceno
           icon = 'trash'
         }
         else if(text == 'spots') {
           content = `<p>名称：${item.name}</p>`
+          name = item.name
           icon = 'home'
         }
         else if(text == 'transfers') {
           content = `<p>名称：${item.name}</p>`
+          name = item.name
           icon = 'exchange'
         }
         else if(text == 'addresses') {
           content = `<p>名称：${item.name}</p>`
+          name = item.name
           icon = 'building'
         };
-        this.addMarker(icon, item.position.lat, item.position.lng, url, content, text, item.id)
+        this.addMarker(icon, item.position.lat, item.position.lng, url, content, text, item.id, name)
       }
     },
     infoWindowTable(data) { // 返回 统计显示 html
@@ -291,9 +322,8 @@ export default {
       let content = '<div class="myInfoWindowTable">'
       for (let i = 0; i < data.details.length; i ++) {
         const item = data.details[i];
-        content += `<span>${item.name} : ${parseInt(item.amount).toFixed(2)}</span>`
+        content += `<span>${item.name} : ${item.amount % 1 === 0 ? item.amount : (item.amount).toFixed(2)} ${item.type}</span>`
       }
-      content += `<p>当天总计：${parseInt(data.total).toFixed(2)}</p></div>`
       return content;
     },
     getStatistics(id, text) { // 获取 统计
@@ -353,7 +383,7 @@ export default {
       }
       let content = e.target.myContent
       const data = e.target.getExtData()
-      if(data.id) {
+      if(data.id && data.text !== 'users' && data.text !== 'trucks') {
         let tongji = await this.getStatistics(data.id, data.text)
         if(!tongji) {
           content += '<h3>部分信息获取错误，请稍后重试</h3>'
@@ -407,7 +437,6 @@ export default {
       return isFull;
     },
     screen(){
-      // let element = document.documentElement;//设置后就是我们平时的整个页面全屏效果
       let element = document.getElementById('myBigMap');//设置后就是   id==con_lf_top_div 的容器全屏
       if (this.fullscreen) {
         if (document.exitFullscreen) {
@@ -433,9 +462,53 @@ export default {
       }
       this.fullscreen = !this.fullscreen;
     },
+    Utf8ArrayToStr(array) {
+      let out, i, len, c;
+      let char2, char3;
+      out = "";
+      len = array.length;
+      i = 0;
+      while(i < len) {
+        c = array[i++];
+        switch(c >> 4)
+        {
+          case 0: case 1: case 2: case 3: case 4: case 5: case 6: case 7:
+          // 0xxxxxxx
+          out += String.fromCharCode(c);
+          break;
+          case 12: case 13:
+          // 110x xxxx 10xx xxxx
+          char2 = array[i++];
+          out += String.fromCharCode(((c & 0x1F) << 6) | (char2 & 0x3F));
+          break;
+          case 14:
+          // 1110 xxxx 10xx xxxx 10xx xxxx
+            char2 = array[i++];
+            char3 = array[i++];
+            out += String.fromCharCode(((c & 0x0F) << 12) |
+                ((char2 & 0x3F) << 6) |
+                ((char3 & 0x3F) << 0));
+            break;
+        }
+      }
+      return out;
+    },
+    destroyConnection() { // 断开MQTT
+      if (this.client && this.client.connected) {
+        try {
+          this.client.end()
+          this.client = {
+            connected: false,
+          }
+          console.log('已成功断开连接！')
+        } catch (error) {
+          console.log('断开连接失败 ', error.toString())
+        }
+      }
+    }
   },
   beforeRouteLeave (to, form, next) {
-    // Echo.leaveChannel(`hefei.ljfl`);
+    this.destroyConnection()
     next()
   }
 };

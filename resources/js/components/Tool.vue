@@ -64,8 +64,10 @@
 <script>
 import { AMapManager, lazyAMapApiLoaderInstance } from "vue-amap";
 let amapManager = new AMapManager(); // 新建生成地图画布
+import mqtt from 'mqtt'
 
 export default {
+  props: ['field'],
   data() {
     let self = this;
     return {
@@ -159,7 +161,7 @@ export default {
     this.markerList['trucks'] = []
     this.markerList['users'] = []
     this.getData(`/api/trucks`).then(res => {
-      this.truckList = res.data.data
+      if (res.status == 200 && res.data && res.data.data) this.truckList = res.data.data
     })
     this.init_echo()
   },
@@ -198,10 +200,33 @@ export default {
       })
     },
     init_echo () { // Echo
-      // Echo.channel(`hefei.ljfl`).listen('.location-changed', (e) => {
-      //   // console.log(e.info)
-      //   this.echoPositionChange(e.info)
-      // })
+      let mqttName = 'getTruckGPS'
+      let type = 'App\\Models\\Truck'
+      this.client = mqtt.connect("ws://iot.norgeit.com:8083/mqtt", {
+        username: "",
+        password: ""
+      });
+      this.client.on("connect", e =>{
+        console.log("连接成功");
+        this.client.subscribe(mqttName, (err)=> {
+          if (!err)  console.log("订阅成功:" + mqttName);
+        });
+      });
+      this.client.on("message", (topic, message) => {
+        // console.log(message)
+        const data = JSON.parse(this.Utf8ArrayToStr(message))
+        // console.log(data);
+        data.subject_type = type
+        this.echoPositionChange(data)
+      });
+      // 断开发起重连
+      this.client.on('reconnect', (error) => {
+          console.log('（mqtt）正在重连:', error, '时间:', new Date().toLocaleString())
+      })
+      // 链接异常处理
+      this.client.on('error', (error) => {
+          console.log('（mqtt）连接失败:', error)
+      })
     },
     echoPositionChange (data) { // 位置变更
       if (data.subject_type === 'App\\Models\\User') {
@@ -213,11 +238,16 @@ export default {
         })
         return
       }
-      for (let index = 0; index < this.truckList.length; index++) {
-        const element = this.truckList[index]
-        if (element.id !== data.subject_id) continue
-        element.position = data.position
-        this.updateMarker(element, 'trucks')
+      if (data.subject_type === 'App\\Models\\Truck') {
+        for (let index = 0; index < this.truckList.length; index++) {
+          const element = this.truckList[index]
+          if (element.licenseNO !== data.ChannelName) continue
+          element.position = {
+            lat: data.Latitude,
+            lng: data.Longitude
+          }
+          this.updateMarker(element, 'trucks')
+        }
       }
     },
     updateMarker (data, type) { // 更新点
@@ -313,10 +343,11 @@ export default {
       if(this.statusRecord.spots) this.manageData(data.spots, 'spots'); // 显示清运点
       if(this.statusRecord.transfers) this.manageData(data.transfers, 'transfers'); // 显示转运站
       if(this.statusRecord.community) this.manageData(data.communities, 'addresses'); // 显示小区
-      // if(this.statusRecord.users) this.manageData(data.users, 'users'); // 显示人员
-      // if(this.statusRecord.trucks) this.manageData(data.trucks, 'trucks'); // 显示车辆
+      if(this.statusRecord.users) this.manageData(data.users, 'users'); // 显示人员
+      if(this.statusRecord.trucks) this.manageData(data.trucks, 'trucks'); // 显示车辆
     },
     async manageData(data, text) { // 信息分类 添加点
+      if (!data) return
       for (let i = 0; i < data.length; i++) {
         const item = data[i];
         const url = `${text}/${item.id}`;
@@ -354,9 +385,9 @@ export default {
       let content = '<div class="myInfoWindowTable">'
       for (let i = 0; i < data.details.length; i ++) {
         const item = data.details[i];
-        content += `<span>${item.name} : ${parseInt(item.amount).toFixed(2)}</span>`
+        content += `<span>${item.name} : ${item.amount % 1 === 0 ? item.amount : (item.amount).toFixed(2)} ${item.type}</span>`
+        // content += `<span>${item.name} : ${parseInt(item.amount).toFixed(2)} ${item.type}</span>`
       }
-      content += `<p>当天总计：${parseInt(data.total).toFixed(2)}</p></div>`
       return content;
     },
     getStatistics(id, text) { // 获取 统计
@@ -493,10 +524,54 @@ export default {
         }
       }
       this.fullscreen = !this.fullscreen;
+    },
+    Utf8ArrayToStr(array) {
+      let out, i, len, c;
+      let char2, char3;
+      out = "";
+      len = array.length;
+      i = 0;
+      while(i < len) {
+        c = array[i++];
+        switch(c >> 4)
+        {
+          case 0: case 1: case 2: case 3: case 4: case 5: case 6: case 7:
+          // 0xxxxxxx
+          out += String.fromCharCode(c);
+          break;
+          case 12: case 13:
+          // 110x xxxx 10xx xxxx
+          char2 = array[i++];
+          out += String.fromCharCode(((c & 0x1F) << 6) | (char2 & 0x3F));
+          break;
+          case 14:
+          // 1110 xxxx 10xx xxxx 10xx xxxx
+            char2 = array[i++];
+            char3 = array[i++];
+            out += String.fromCharCode(((c & 0x0F) << 12) |
+                ((char2 & 0x3F) << 6) |
+                ((char3 & 0x3F) << 0));
+            break;
+        }
+      }
+      return out;
+    },
+    destroyConnection() { // 断开MQTT
+      if (this.client && this.client.connected) {
+        try {
+          this.client.end()
+          this.client = {
+            connected: false,
+          }
+          console.log('已成功断开连接！')
+        } catch (error) {
+          console.log('断开连接失败 ', error.toString())
+        }
+      }
     }
   },
   beforeRouteLeave (to, form, next) {
-    // Echo.leaveChannel(`hefei.ljfl`);
+    this.destroyConnection()
     next()
   }
 };
