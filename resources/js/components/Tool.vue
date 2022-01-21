@@ -137,9 +137,7 @@ export default {
     this.statusRecord = JSON.parse(localStorage.getItem('statusRecord')) ? JSON.parse(localStorage.getItem('statusRecord')) : this.statusRecord;
   },
   mounted() {
-    setInterval(() => { //  一分钟检测一次
-      this.regularCheck();
-    }, 60000);
+    setInterval(() => { this.regularCheck(); }, 60000); //  一分钟检测一次
     //监听浏览器状态
     window.onresize = () => {
       if(!this.checkFull()){
@@ -163,9 +161,8 @@ export default {
     this.getData(`/api/trucks`).then(res => {
       if (res.status == 200 && res.data && res.data.data) this.truckList = res.data.data
     })
-    this.init_echo()
+    this.init_mqtt()
   },
-
   methods: {
     addMarker (icon, lat, lng, url, content, text, id) {
       AMapUI.loadUI(['overlay/AwesomeMarker'], (AwesomeMarker) => {
@@ -199,10 +196,11 @@ export default {
         this.clearMarkers.push(marker)
       })
     },
-    init_echo () { // Echo
+    init_mqtt () { // mqtt
+      const url = document.location.protocol == 'http:' ? 'ws://iot.norgeit.com:8083/mqtt' : 'wss://iot.norgeit.com:8084/mqtt'
       let mqttName = 'getTruckGPS'
       let type = 'App\\Models\\Truck'
-      this.client = mqtt.connect("ws://iot.norgeit.com:8083/mqtt", {
+      this.client = mqtt.connect(url, {
         username: "",
         password: ""
       });

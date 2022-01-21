@@ -156,18 +156,19 @@ export default {
         this.markerList.push(marker)
       })
     },
-    init_echo () { // Echo
+    init_mqtt () { // mqtt
+      const url = document.location.protocol == 'http:' ? 'ws://iot.norgeit.com:8083/mqtt' : 'wss://iot.norgeit.com:8084/mqtt'
       let mqttName = '', type
       if (this.showType == 'truck') {
         mqttName = 'getTruckGPS'
-        type = 'App\\Models\\User'
+        type = 'App\\Models\\Truck'
       }
       else if (this.showType == 'user') {
         mqttName = 'getUserGPS'
-        type = 'App\\Models\\Truck'
+        type = 'App\\Models\\User'
       }
       else return
-      this.client = mqtt.connect("ws://iot.norgeit.com:8083/mqtt", {
+      this.client = mqtt.connect(url, {
         username: "",
         password: ""
       });
@@ -274,8 +275,8 @@ export default {
       else if(this.showType == 'spot') this.manageData(data, 'spots'); // 显示清运点
       else if(this.showType == 'transfer')this.manageData(data, 'transfers'); // 显示转运站
       else if(this.showType == 'communityCount')this.manageData(data, 'addresses'); // 显示转运站
-      else if(this.showType == 'user') { this.manageData(data, 'users'); this.init_echo() } // 显示用户
-      else if(this.showType == 'truck') { this.manageData(data, 'trucks'); this.init_echo() } // 显示车辆
+      else if(this.showType == 'user') { this.manageData(data, 'users'); this.init_mqtt() } // 显示用户
+      else if(this.showType == 'truck') { this.manageData(data, 'trucks'); this.init_mqtt() } // 显示车辆
     },
     async manageData(data, text) { // 信息分类 添加点
       if (!data) return
