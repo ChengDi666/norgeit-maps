@@ -265,6 +265,7 @@ export default {
     getMessage(type) {
       if (type != 'transfer') type += 's'
       if (type == 'communityCounts') type = 'addresses/communityCounts'
+      if (type == 'trucks') type += '?lastPosition=true'
       this.getData(`/api/${type}`)
         .then(res => {
           if(res.data.data && res.data.data.length) this.detailMarker(res.data.data);
@@ -282,7 +283,6 @@ export default {
       if (!data) return
       for (let i = 0; i < data.length; i++) {
         const item = data[i];
-        if(!item.position || !item.position.lat) continue
         let url = `${text}/${item.id}`;
         let content, icon, name;
         if(text == 'users') {
@@ -292,6 +292,7 @@ export default {
         }
         else if(text == 'trucks') {
           content = `<p>车牌：${item.licenseNO}</p>`
+          if (item.lastPosition || item.lastPosition.length) item.position = item.lastPosition
           name = item.licenseNO
           icon = 'truck'
         }
@@ -315,6 +316,7 @@ export default {
           name = item.name
           icon = 'building'
         };
+        if(!item.position || !item.position.lat) continue
         this.addMarker(icon, item.position.lat, item.position.lng, url, content, text, item.id, name)
       }
     },

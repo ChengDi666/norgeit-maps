@@ -158,7 +158,7 @@ export default {
     this.position = [lng, lat];
     this.markerList['trucks'] = []
     this.markerList['users'] = []
-    this.getData(`/api/trucks`).then(res => {
+    this.getData(`/api/trucks?lastPosition=true`).then(res => {
       if (res.status == 200 && res.data && res.data.data) this.truckList = res.data.data
     })
     this.init_mqtt()
@@ -192,7 +192,7 @@ export default {
           this.markerList[text].push(marker)
         }
         marker.setMap(this.myMap);
-        if (text === 'users' || text === 'trucks') return // 不添加到清除
+        if (text === 'users') return // 不添加到清除
         this.clearMarkers.push(marker)
       })
     },
@@ -293,8 +293,6 @@ export default {
           this.statusRecord[e.target.value] = e.target.checked
         }
       }
-      if (!this.statusRecord.trucks) this.myMap.remove(this.markerList['trucks']) // 隐藏-移除车辆
-      else this.myMap.add(this.markerList['trucks']) // 显示-添加车辆
       if (!this.statusRecord.users) this.myMap.remove(this.markerList['users']) // 隐藏-移除人员
       else this.myMap.add(this.markerList['users']) // 显示-添加人员
       localStorage.setItem('statusRecord', JSON.stringify(this.statusRecord));
@@ -342,7 +340,7 @@ export default {
       if(this.statusRecord.transfers) this.manageData(data.transfers, 'transfers'); // 显示转运站
       if(this.statusRecord.community) this.manageData(data.communities, 'addresses'); // 显示小区
       if(this.statusRecord.users) this.manageData(data.users, 'users'); // 显示人员
-      if(this.statusRecord.trucks) this.manageData(data.trucks, 'trucks'); // 显示车辆
+      if(this.statusRecord.trucks && this.truckList.length) this.manageData(this.truckList, 'trucks'); // 显示车辆
     },
     async manageData(data, text) { // 信息分类 添加点
       if (!data) return
@@ -374,8 +372,10 @@ export default {
           icon = 'user'
         } else if (text === 'trucks') {
           content = `<p>车辆：${item.licenseNO}</p>`
+          if (item.lastPosition || item.lastPosition.length) item.position = item.lastPosition
           icon = 'truck'
         }
+        if(!item.position || !item.position.lat) continue
         this.addMarker(icon, item.position.lat, item.position.lng, url, content, text, item.id)
       }
     },
